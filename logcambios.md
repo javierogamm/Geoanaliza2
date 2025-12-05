@@ -14,3 +14,6 @@
 - Añadido endpoint serverless en `/api/points` dentro del propio despliegue de Vercel reutilizando la aplicación Express del backend.
 - Actualizadas las reglas de reescritura de Vercel para dirigir las peticiones API internas al backend en Vercel en lugar de Render.
 - Mantenida la ruta del frontend sirviendo desde la carpeta `frontend` dentro del mismo proyecto.
+
+## Versión 1.2.1 - 2025-12-05
+- Se añaden logs detallados en la función serverless y en la ruta `/api/points` del backend para depurar por qué no se devuelven puntos.
