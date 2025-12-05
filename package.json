@@ -1,0 +1,19 @@
+{
+  "name": "geoanaliza2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Configuración raíz para despliegues en Vercel",
+  "scripts": {
+    "dev": "npm --prefix backend run dev",
+    "build": "npm --prefix backend run build",
+    "start": "npm --prefix backend run start",
+    "test": "npm --prefix backend test",
+    "type-check": "npm --prefix backend run type-check",
+    "lint": "npm --prefix backend run lint"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "node-fetch": "^2.6.12"
+  }
+}
