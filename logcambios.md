@@ -9,3 +9,8 @@
 
 ## Versión 1.1.1 - 2025-12-04
 - Corrige la transposición de datos para que utilice los expedientes importados junto a los puntos mostrados, generando filas para los campos base y personalizados seleccionados.
+
+## Versión 1.2.0 - 2025-12-05
+- Añadido endpoint serverless en `/api/points` dentro del propio despliegue de Vercel reutilizando la aplicación Express del backend.
+- Actualizadas las reglas de reescritura de Vercel para dirigir las peticiones API internas al backend en Vercel en lugar de Render.
+- Mantenida la ruta del frontend sirviendo desde la carpeta `frontend` dentro del mismo proyecto.
