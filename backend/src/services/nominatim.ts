@@ -46,7 +46,19 @@ export const fetchCityBoundingBox = async (city: string): Promise<CityLocation> 
   url.searchParams.set('limit', '1');
   url.searchParams.set('city', city);
 
+  const startedAt = Date.now();
+  console.info('[nominatim] Fetching city', {
+    city,
+    url: url.toString()
+  });
+
   const response = await scheduleNominatim(() => fetch(url.toString(), withUserAgent()));
+  console.info('[nominatim] Response received', {
+    city,
+    status: response.status,
+    statusText: response.statusText,
+    durationMs: Date.now() - startedAt
+  });
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
     throw new Error(
@@ -62,11 +74,19 @@ export const fetchCityBoundingBox = async (city: string): Promise<CityLocation> 
   }
 
   const [match] = results;
-  return {
+  const resolved = {
     city: extractDisplayCity(match, city),
     displayName: match.display_name,
     boundingBox: parseBoundingBox(match.boundingbox)
   };
+
+  console.info('[nominatim] City parsed', {
+    requestedCity: city,
+    resolvedCity: resolved.city,
+    boundingBox: resolved.boundingBox
+  });
+
+  return resolved;
 };
 
 export const fetchNeighbourhoodBoundingBox = async (
@@ -80,7 +100,19 @@ export const fetchNeighbourhoodBoundingBox = async (
   url.searchParams.set('limit', '1');
   url.searchParams.set('q', query);
 
+  const startedAt = Date.now();
+  console.info('[nominatim] Fetching neighbourhood', {
+    query,
+    url: url.toString()
+  });
+
   const response = await scheduleNominatim(() => fetch(url.toString(), withUserAgent()));
+  console.info('[nominatim] Neighbourhood response received', {
+    query,
+    status: response.status,
+    statusText: response.statusText,
+    durationMs: Date.now() - startedAt
+  });
   if (!response.ok) {
     return null;
   }
@@ -90,5 +122,11 @@ export const fetchNeighbourhoodBoundingBox = async (
     return null;
   }
 
-  return parseBoundingBox(results[0].boundingbox);
+  const box = parseBoundingBox(results[0].boundingbox);
+  console.info('[nominatim] Neighbourhood parsed', {
+    query,
+    boundingBox: box
+  });
+
+  return box;
 };

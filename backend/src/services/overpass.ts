@@ -90,9 +90,22 @@ export const queryOverpassForNodes = async (
   const query = buildQuery(bbox);
   const body = new URLSearchParams({ data: query });
 
+  console.info('[overpass] Sending query', {
+    bbox,
+    limit,
+    queryLength: query.length,
+    preview: query.slice(0, 120)
+  });
+
   const response = await scheduleOverpass(() =>
     fetch(OVERPASS_URL, withUserAgent({ method: 'POST', body }))
   );
+  console.info('[overpass] Response received', {
+    status: response.status,
+    statusText: response.statusText,
+    limit,
+    bbox
+  });
   if (!response.ok) {
     const detail = await response.text().catch(() => '');
     throw new Error(
@@ -106,6 +119,12 @@ export const queryOverpassForNodes = async (
   const elements = payload?.elements ?? [];
 
   const mapped = elements.map(toPoint).filter(hasStreet);
+
+  console.info('[overpass] Parsed elements', {
+    totalElements: elements.length,
+    withStreet: mapped.length,
+    returned: Math.min(mapped.length, limit)
+  });
 
   return {
     totalAvailable: mapped.length,
