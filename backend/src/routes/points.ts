@@ -19,6 +19,12 @@ router.get('/', async (req, res) => {
     typeof req.query.neighbourhood === 'string' ? req.query.neighbourhood.trim() : '';
   const limit = parseLimit(req.query.limit);
 
+  console.info('[api/points] Received request', {
+    city,
+    neighbourhood,
+    limit
+  });
+
   if (!city) {
     return res.status(400).json({ error: 'El parámetro city es obligatorio' });
   }
@@ -39,16 +45,34 @@ router.get('/', async (req, res) => {
 
     const { totalAvailable, points } = await queryOverpassForNodes(searchBoundingBox, limit);
 
-    return res.json({
+    const payload = {
       city: cityInfo.city,
       neighbourhood: resolvedNeighbourhood,
       totalAvailable,
       returned: points.length,
       points
+    };
+
+    console.info('[api/points] Response ready', {
+      city: payload.city,
+      neighbourhood: payload.neighbourhood,
+      returned: payload.returned,
+      totalAvailable: payload.totalAvailable
     });
+
+    return res.json(payload);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'No se pudo completar la búsqueda de puntos';
+
+    console.error('[api/points] Error while resolving request', {
+      city,
+      neighbourhood,
+      limit,
+      message,
+      stack: error instanceof Error ? error.stack : undefined
+    });
+
     return res.status(500).json({ error: message });
   }
 });
