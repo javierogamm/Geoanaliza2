@@ -67,57 +67,28 @@ router.get('/', async (req, res) => {
   const neighbourhood =
     typeof req.query.neighbourhood === 'string' ? req.query.neighbourhood.trim() : '';
   const limit = parseLimit(req.query.limit);
-  const boundingBox = parseBoundingBox(req.query);
   const startedAt = Date.now();
 
   console.info('[api/points] Received request', {
     city,
     neighbourhood,
     limit,
-    boundingBox,
     query: req.query,
     path: req.originalUrl
   });
 
-  if (!city && !boundingBox) {
+  if (!city) {
     return res.status(400).json({ error: 'El parámetro city es obligatorio' });
   }
 
   try {
-    if (boundingBox) {
-      const labelledCity = city || 'Área seleccionada';
-      console.info('[api/points] Using provided bounding box', {
-        boundingBox,
-        limit,
-        city: labelledCity
-      });
-
-      const { totalAvailable, points } = await queryOverpassForNodes(boundingBox, limit);
-
-      const payload = {
-        city: labelledCity,
-        neighbourhood: null as string | null,
-        area: boundingBox,
-        areaLabel: 'Área delimitada en el mapa',
-        totalAvailable,
-        returned: points.length,
-        points
-      };
-
-      const durationMs = Date.now() - startedAt;
-
-      console.info('[api/points] Area search response ready', {
-        city: payload.city,
-        returned: payload.returned,
-        totalAvailable: payload.totalAvailable,
-        durationMs,
-        boundingBox
-      });
-
-      return res.json(payload);
-    }
-
     const cityInfo = await fetchCityBoundingBox(city);
+
+    console.info('[api/points] City resolved', {
+      requestedCity: city,
+      resolvedCity: cityInfo.city,
+      boundingBox: cityInfo.boundingBox
+    });
 
     console.info('[api/points] City resolved', {
       requestedCity: city,
