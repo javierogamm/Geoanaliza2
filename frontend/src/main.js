@@ -34,12 +34,10 @@ let mockPoints = [];
 // Variables para la selección de área en mapa
 let mapInstance = null;
 let drawnArea = null;
-let pointsLayer = null;
 let drawStart = null;
 let isDrawing = false;
 let selectionEnabled = false;
 let areaBounds = null;
-let leafletReady = false;
 
 const parseLimit = (value) => {
   const parsed = parseInt(value, 10);
@@ -66,6 +64,12 @@ function generateMockPoints(numRows) {
       source: 'mock'
     });
   }
+}
+
+function setAreaStatus(message, isError = false) {
+  if (!areaStatus) return;
+  areaStatus.textContent = message;
+  areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
 }
 
 function setAreaStatus(message, isError = false) {
@@ -166,6 +170,10 @@ if (areaMapContainer) {
   prepareAreaMap();
 }
 
+if (areaMapContainer) {
+  initAreaMap();
+}
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -258,60 +266,9 @@ function clearAreaSelection() {
     mapInstance.removeLayer(drawnArea);
     drawnArea = null;
   }
-  if (pointsLayer) {
-    pointsLayer.clearLayers();
-  }
   if (areaMapContainer) {
     areaMapContainer.classList.remove('drawing');
   }
-}
-
-function prepareAreaMap() {
-  if (!areaMapContainer) return;
-
-  loadLeaflet()
-    .then(() => {
-      initAreaMap();
-    })
-    .catch((error) => {
-      setAreaStatus(error.message || 'El mapa no pudo cargarse.', true);
-    });
-}
-
-function loadLeaflet() {
-  if (leafletReady || window.L) {
-    leafletReady = true;
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve, reject) => {
-    const existingScript = document.querySelector('script[data-leaflet="true"]');
-    if (existingScript && existingScript.dataset.loaded === 'true') {
-      leafletReady = true;
-      resolve();
-      return;
-    }
-
-    const script = existingScript || document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-    script.crossOrigin = '';
-    script.dataset.leaflet = 'true';
-
-    script.onload = () => {
-      leafletReady = true;
-      script.dataset.loaded = 'true';
-      resolve();
-    };
-
-    script.onerror = () => {
-      reject(new Error('No se pudo cargar el mapa. Comprueba tu conexión e inténtalo de nuevo.'));
-    };
-
-    if (!existingScript) {
-      document.body.appendChild(script);
-    }
-  });
 }
 
 function initAreaMap() {
@@ -328,8 +285,6 @@ function initAreaMap() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Datos geográficos © OpenStreetMap contributors'
   }).addTo(mapInstance);
-
-  pointsLayer = L.layerGroup().addTo(mapInstance);
 
   const finishDrawing = (event) => {
     if (!isDrawing || !drawnArea || !event?.latlng) {
@@ -378,69 +333,6 @@ function initAreaMap() {
   mapInstance.on('mouseout', finishDrawing);
 
   setAreaStatus('Pulsa "Dibujar área" y arrastra en el mapa para delimitar la búsqueda.');
-
-  // Asegurar que el mapa se pinta correctamente tras la inicialización
-  setTimeout(() => {
-    if (mapInstance) {
-      mapInstance.invalidateSize();
-    }
-  }, 150);
-}
-
-function ensurePointsLayer() {
-  if (!mapInstance || !window.L) {
-    return null;
-  }
-
-  if (!pointsLayer) {
-    pointsLayer = L.layerGroup().addTo(mapInstance);
-  }
-
-  return pointsLayer;
-}
-
-function plotPointsOnMap(points, boundsToFit) {
-  if (!mapInstance || !leafletReady) return;
-
-  const layer = ensurePointsLayer();
-  if (!layer) return;
-
-  layer.clearLayers();
-
-  const validPoints = (points || []).filter(
-    (point) => typeof point.lat === 'number' && typeof point.lng === 'number'
-  );
-
-  validPoints.forEach((point) => {
-    const marker = L.circleMarker([point.lat, point.lng], {
-      radius: 6,
-      color: '#2563eb',
-      weight: 1,
-      fillColor: '#3b82f6',
-      fillOpacity: 0.7
-    });
-
-    if (point.name) {
-      marker.bindTooltip(point.name, { permanent: false });
-    }
-
-    marker.addTo(layer);
-  });
-
-  if (validPoints.length === 0 && !boundsToFit) {
-    return;
-  }
-
-  let bounds = null;
-  if (boundsToFit && boundsToFit.isValid()) {
-    bounds = boundsToFit;
-  } else if (validPoints.length > 0) {
-    bounds = L.latLngBounds(validPoints.map((point) => [point.lat, point.lng]));
-  }
-
-  if (bounds && bounds.isValid()) {
-    mapInstance.fitBounds(bounds.pad(0.15));
-  }
 }
 
 async function performAreaSearch() {
@@ -464,9 +356,6 @@ async function performAreaSearch() {
     const data = await fetchPointsInBoundingBox({ bbox, limit, city: cityInput.value.trim() });
     lastPointsData = data;
     mockPoints = [];
-    if (!cityInput.value.trim() && data.city) {
-      cityInput.value = data.city;
-    }
     renderMeta({
       city: data.city,
       neighbourhood: data.neighbourhood,
@@ -475,7 +364,6 @@ async function performAreaSearch() {
       areaLabel: data.areaLabel || 'Área seleccionada'
     });
     renderPoints(data.points);
-    plotPointsOnMap(data.points, areaBounds);
     setStatus('');
     setAreaStatus('Resultados cargados. Puedes volver a dibujar para refinar.');
   } catch (error) {
