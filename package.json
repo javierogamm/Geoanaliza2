@@ -4,6 +4,7 @@
   "private": true,
   "description": "Configuración raíz para despliegues en Vercel",
   "scripts": {
+    "postinstall": "npm --prefix backend install",
     "dev": "npm --prefix backend run dev",
     "build": "npm --prefix backend run build",
     "start": "npm --prefix backend run start",

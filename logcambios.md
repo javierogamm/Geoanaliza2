@@ -21,3 +21,7 @@
 ## Versión 1.2.2 - 2025-12-05
 - Se añade un `package.json` en la raíz con dependencias del backend para que Vercel instale y resuelva correctamente `express`, `cors` y `node-fetch` en la función serverless.
 - Se configura `vercel.json` para incluir los archivos del backend en el bundle de la función `/api/points`, evitando errores 500 por dependencias ausentes al desplegar en Vercel.
+
+## Versión 1.2.3 - 2025-12-05
+- Se agrega un script `postinstall` en la raíz para instalar automáticamente las dependencias del backend durante el build en
+  Vercel, garantizando que la función `/api/points` tenga disponibles sus módulos al desplegar.
