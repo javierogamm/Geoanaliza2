@@ -72,6 +72,12 @@ function setAreaStatus(message, isError = false) {
   areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
 }
 
+function setAreaStatus(message, isError = false) {
+  if (!areaStatus) return;
+  areaStatus.textContent = message;
+  areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
+}
+
 // Función para generar puntos desde expedientes importados
 function generatePointsFromExpedientes(expedientes) {
   const { values } = expedientes;
@@ -161,6 +167,10 @@ initTranspose(getCurrentPoints, getCustomColumnsDataMap);
 initCreateExpedients();
 
 if (areaMapContainer) {
+  prepareAreaMap();
+}
+
+if (areaMapContainer) {
   initAreaMap();
 }
 
@@ -207,6 +217,7 @@ async function performSearch() {
       returned: data.returned
     });
     renderPoints(data.points);
+    plotPointsOnMap(data.points);
     setStatus('');
   } catch (error) {
     setStatus(error.message || 'No se pudo obtener puntos', true);

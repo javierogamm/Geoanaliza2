@@ -12,6 +12,8 @@ type NominatimResult = {
     town?: string;
     village?: string;
     municipality?: string;
+    county?: string;
+    state?: string;
     suburb?: string;
     neighbourhood?: string;
     city_district?: string;
@@ -21,6 +23,7 @@ type NominatimResult = {
 const NOMINATIM_BASE_URL =
   process.env.NOMINATIM_BASE_URL || 'https://nominatim.openstreetmap.org';
 const NOMINATIM_SEARCH_URL = `${NOMINATIM_BASE_URL}/search`;
+const NOMINATIM_REVERSE_URL = `${NOMINATIM_BASE_URL}/reverse`;
 const MIN_INTERVAL_MS = process.env.NODE_ENV === 'test' ? 0 : 1000;
 const scheduleNominatim = createRateLimiter(MIN_INTERVAL_MS);
 
@@ -36,6 +39,21 @@ const extractDisplayCity = (result: NominatimResult, fallback: string): string =
     result.address.village ||
     result.address.municipality ||
     fallback
+  );
+};
+
+const extractCityFromAddress = (
+  address: Partial<NominatimResult['address']>
+): string | null => {
+  return (
+    address.city ||
+    address.town ||
+    address.village ||
+    address.municipality ||
+    address.county ||
+    address.city_district ||
+    address.state ||
+    null
   );
 };
 
