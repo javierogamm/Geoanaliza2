@@ -12,6 +12,8 @@ type NominatimResult = {
     town?: string;
     village?: string;
     municipality?: string;
+    county?: string;
+    state?: string;
     suburb?: string;
     neighbourhood?: string;
     city_district?: string;
@@ -48,8 +50,9 @@ const extractCityFromAddress = (
     address.town ||
     address.village ||
     address.municipality ||
-    address.city_district ||
     address.county ||
+    address.city_district ||
+    address.state ||
     null
   );
 };

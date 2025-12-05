@@ -67,3 +67,6 @@
 ## Versión 1.3.1 - 2025-12-06
 - Se permite consultar `/api/points` solo con el área dibujada, resolviendo automáticamente la ciudad mediante Nominatim cuando no se envía el parámetro `city`.
 - El frontend muestra los puntos devueltos sobre el mapa de selección y centra la vista en el área consultada para confirmar visualmente el alcance.
+
+## Versión 1.3.2 - 2025-12-06
+- Se amplía el esquema de dirección de Nominatim para incluir `county` y `state`, alineándolo con las respuestas de búsqueda inversa y evitando errores de compilación en Vercel al resolver ciudades desde un bounding box.
