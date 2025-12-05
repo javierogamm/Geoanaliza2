@@ -17,8 +17,8 @@ export function setStatus(message, isError = false) {
   statusMessage.style.color = isError ? '#f87171' : '';
 }
 
-export function renderMeta({ city, neighbourhood, totalAvailable, returned }) {
-  const scope = neighbourhood ? `${neighbourhood} · ${city}` : city;
+export function renderMeta({ city, neighbourhood, totalAvailable, returned, areaLabel }) {
+  const scope = areaLabel ? areaLabel : neighbourhood ? `${neighbourhood} · ${city}` : city;
   resultsMeta.textContent = `${returned} de ${totalAvailable || returned} puntos para ${scope}`;
 }
 

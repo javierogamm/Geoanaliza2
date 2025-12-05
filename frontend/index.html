@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AppGeoAnaliza</title>
     <link rel="stylesheet" href="./styles/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
   </head>
   <body>
     <main class="layout">
@@ -36,6 +42,22 @@
           <button type="submit" class="btn">Buscar puntos</button>
         </form>
         <p class="status" id="status-message"></p>
+      </section>
+
+      <section class="panel area-panel">
+        <div class="area-header">
+          <div>
+            <h2>Buscar por área en mapa</h2>
+            <p class="meta">Dibuja un rectángulo en el mapa y busca puntos dentro de la zona.</p>
+          </div>
+          <div class="area-actions">
+            <button id="draw-area-btn" type="button" class="btn-secondary">Dibujar área</button>
+            <button id="reset-area-btn" type="button" class="btn-secondary">Limpiar área</button>
+            <button id="search-area-btn" type="button" class="btn">Buscar en área</button>
+          </div>
+        </div>
+        <div id="area-map" class="area-map" aria-label="Mapa para seleccionar área"></div>
+        <p id="area-status" class="meta area-status"></p>
       </section>
 
       <section class="panel results">
@@ -441,6 +463,12 @@
       </div>
     </main>
 
+    <!-- Leaflet para selección de áreas en mapa -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
     <!-- SheetJS para leer archivos Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script type="module" src="./src/main.js"></script>
