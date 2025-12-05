@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AppGeoAnaliza</title>
+    <link rel="stylesheet" href="./styles/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">OpenStreetMap powered</p>
+          <h1>AppGeoAnaliza</h1>
+          <p class="lead">
+            Introduce un municipio y, opcionalmente, un barrio para obtener puntos geolocalizados desde
+            OpenStreetMap.
+          </p>
+        </div>
+      </header>
+
+      <section class="panel">
+        <form id="search-form" class="form">
+          <div class="field">
+            <label for="city">Municipio *</label>
+            <input id="city" name="city" type="text" placeholder="Ej. Zaragoza" required />
+          </div>
+          <div class="field">
+            <label for="neighbourhood">Barrio (opcional)</label>
+            <input id="neighbourhood" name="neighbourhood" type="text" placeholder="Ej. Delicias" />
+          </div>
+          <div class="field">
+            <label for="limit">Nº de puntos</label>
+            <input id="limit" name="limit" type="number" min="1" max="100" value="20" />
+          </div>
+          <button type="submit" class="btn">Buscar puntos</button>
+        </form>
+        <p class="status" id="status-message"></p>
+      </section>
+
+      <section class="panel results">
+        <div class="results-header">
+          <h2>Resultados</h2>
+          <div class="results-actions">
+            <p class="meta" id="results-meta"></p>
+            <button id="import-excel-btn" type="button" class="btn btn-import">
+              📊 Importar Expedientes
+            </button>
+            <button id="import-csv-btn" type="button" class="btn btn-import">
+              📄 Importar CSV
+            </button>
+            <button id="transpose-btn" type="button" class="btn btn-transpose" style="display: none;">
+              🔄 Transponer datos
+            </button>
+            <button id="create-expedients-btn" type="button" class="btn btn-primary">
+              ✨ Crear Expedientes
+            </button>
+            <button id="add-column-btn" type="button" class="btn btn-add">
+              <span class="btn-icon">+</span> Añadir columna
+            </button>
+            <button id="export-btn" type="button" class="btn" disabled>Exportar CSV</button>
+          </div>
+        </div>
+        <div id="results-list" class="results-list" aria-live="polite"></div>
+        <p class="attribution">Datos geográficos © OpenStreetMap contributors</p>
+      </section>
+
+      <!-- Modal para seleccionar campos a transponer -->
+      <div id="select-fields-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Seleccionar campos a transponer</h3>
+            <button id="close-select-fields-modal" class="btn-close">&times;</button>
+          </div>
+          <form id="select-fields-form" class="column-form">
+            <p class="help-text" style="margin-top: 0;">Selecciona los campos que deseas incluir en la transposición</p>
+
+            <div class="field">
+              <label style="font-weight: 600;">Columnas base</label>
+              <div id="base-fields-checkboxes" class="checkbox-group">
+                <!-- Los checkboxes de columnas base se añaden dinámicamente -->
+              </div>
+            </div>
+
+            <div class="field">
+              <label style="font-weight: 600;">Columnas personalizadas</label>
+              <div id="custom-fields-checkboxes" class="checkbox-group">
+                <!-- Los checkboxes de columnas personalizadas se añaden dinámicamente -->
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" id="cancel-select-fields" class="btn-secondary">Cancelar</button>
+              <button type="submit" class="btn">Transponer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal para tabla transpuesta -->
+      <div id="transpose-modal" class="modal">
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <h3>Datos Transpuestos (Agrupados por Expediente)</h3>
+            <button id="close-transpose-modal" class="btn-close">&times;</button>
+          </div>
+          <div class="transpose-content">
+            <div class="transpose-actions">
+              <button id="export-transposed-excel" type="button" class="btn">
+                📥 Exportar a Excel
+              </button>
+            </div>
+            <div id="transposed-table-container" class="transposed-table-container">
+              <!-- La tabla transpuesta se renderiza aquí -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal para importar expedientes -->
+      <div id="import-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Importar Expedientes desde Excel</h3>
+            <button id="close-import-modal" class="btn-close">&times;</button>
+          </div>
+          <form id="import-form" class="column-form">
+            <p class="help-text" style="margin-top: 0;">Selecciona un archivo Excel (.xlsx, .xls) para importar los expedientes</p>
+
+            <div class="field">
+              <label for="excel-file">Archivo Excel *</label>
+              <input id="excel-file" type="file" accept=".xlsx,.xls" required />
+              <p class="help-text">Formatos soportados: .xlsx, .xls</p>
+            </div>
+
+            <div class="field">
+              <label for="column-select">Columna a importar *</label>
+              <select id="column-select" required disabled>
+                <option value="">Primero carga un archivo...</option>
+              </select>
+              <p class="help-text">Selecciona la columna del Excel que contiene los expedientes</p>
+            </div>
+
+            <div class="field">
+              <label for="expediente-name">Nombre del tesauro *</label>
+              <input id="expediente-name" type="text" placeholder="Ej. Expediente" value="Expediente" required />
+            </div>
+
+            <div class="field">
+              <label for="expediente-reference">Referencia *</label>
+              <input id="expediente-reference" type="text" placeholder="Ej. expediente" value="expediente" required />
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" id="cancel-import-modal" class="btn-secondary">Cancelar</button>
+              <button type="submit" class="btn">Importar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal para importar CSV -->
+      <div id="import-csv-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Importar columna desde CSV</h3>
+            <button id="close-csv-modal" class="btn-close">&times;</button>
+          </div>
+          <form id="csv-form" class="column-form">
+            <p class="help-text" style="margin-top: 0;">Selecciona un archivo CSV para importar una columna</p>
+
+            <div class="field">
+              <label for="csv-file">Archivo CSV *</label>
+              <input id="csv-file" type="file" accept=".csv" required />
+              <p class="help-text">Formato soportado: .csv (separado por comas o punto y coma)</p>
+            </div>
+
+            <div class="field">
+              <label for="csv-column-select">Columna a importar *</label>
+              <select id="csv-column-select" required disabled>
+                <option value="">Primero carga un archivo...</option>
+              </select>
+              <p class="help-text">Selecciona la columna del CSV que quieres añadir a la tabla</p>
+            </div>
+
+            <div class="field">
+              <label for="csv-column-name">Nombre del tesauro *</label>
+              <input id="csv-column-name" type="text" placeholder="Ej. Nueva columna" required />
+            </div>
+
+            <div class="field">
+              <label for="csv-column-reference">Referencia *</label>
+              <input id="csv-column-reference" type="text" placeholder="Ej. nueva_columna" required />
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" id="cancel-csv-modal" class="btn-secondary">Cancelar</button>
+              <button type="submit" class="btn">Importar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal para configurar tesauros base -->
+      <div id="base-columns-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Configurar columnas base</h3>
+            <button id="close-base-modal" class="btn-close">&times;</button>
+          </div>
+          <form id="base-columns-form" class="column-form">
+            <p class="help-text" style="margin-top: 0;">Define los nombres de tesauro para las columnas base antes de importar los geodatos</p>
+
+            <div class="field">
+              <label for="street-name">Dirección - Nombre del tesauro *</label>
+              <input id="street-name" type="text" placeholder="Ej. Dirección" required />
+            </div>
+            <div class="field">
+              <label for="street-reference">Dirección - Referencia *</label>
+              <input id="street-reference" type="text" placeholder="Ej. direccion" required />
+            </div>
+
+            <div class="field">
+              <label for="lat-name">Latitud - Nombre del tesauro *</label>
+              <input id="lat-name" type="text" placeholder="Ej. Latitud" required />
+            </div>
+            <div class="field">
+              <label for="lat-reference">Latitud - Referencia *</label>
+              <input id="lat-reference" type="text" placeholder="Ej. latitud" required />
+            </div>
+
+            <div class="field">
+              <label for="lng-name">Longitud - Nombre del tesauro *</label>
+              <input id="lng-name" type="text" placeholder="Ej. Longitud" required />
+            </div>
+            <div class="field">
+              <label for="lng-reference">Longitud - Referencia *</label>
+              <input id="lng-reference" type="text" placeholder="Ej. longitud" required />
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" id="cancel-base-modal" class="btn-secondary">Cancelar</button>
+              <button type="submit" class="btn">Continuar búsqueda</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal para añadir columna personalizada -->
+      <div id="column-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Añadir columna personalizada</h3>
+            <button id="close-modal" class="btn-close">&times;</button>
+          </div>
+          <form id="column-form" class="column-form">
+            <div class="field">
+              <label for="column-name">Nombre del tesauro *</label>
+              <input id="column-name" type="text" placeholder="Ej. Precio estimado" required />
+            </div>
+
+            <div class="field">
+              <label for="column-reference">Referencia *</label>
+              <input id="column-reference" type="text" placeholder="Ej. precio_est" required />
+              <p class="help-text">Identificador interno de la columna</p>
+            </div>
+
+            <div class="field">
+              <label for="column-type">Tipo de columna *</label>
+              <select id="column-type" required>
+                <option value="">Seleccionar tipo...</option>
+                <option value="selector">Selector (opciones con %)</option>
+                <option value="number">Número</option>
+                <option value="currency">Moneda</option>
+                <option value="date">Fecha</option>
+              </select>
+            </div>
+
+            <!-- Campo para número de filas (solo visible si no hay datos) -->
+            <div id="rows-field" class="field" style="display: none;">
+              <label for="num-rows">Número de filas a generar *</label>
+              <input id="num-rows" type="number" min="1" max="1000" value="20" placeholder="20" />
+              <p class="help-text">Se generarán filas con datos ficticios para las columnas personalizadas</p>
+            </div>
+
+            <!-- Configuración específica para cada tipo -->
+            <div id="config-selector" class="config-section" style="display: none;">
+              <h4>Opciones del selector</h4>
+              <div id="selector-options">
+                <!-- Las opciones se añaden dinámicamente -->
+              </div>
+              <button type="button" id="add-option-btn" class="btn-secondary">+ Añadir opción</button>
+              <p class="help-text">La suma de porcentajes debe ser 100%</p>
+            </div>
+
+            <div id="config-number" class="config-section" style="display: none;">
+              <div class="field-group">
+                <div class="field">
+                  <label for="number-min">Mínimo *</label>
+                  <input id="number-min" type="number" step="any" placeholder="0" />
+                </div>
+                <div class="field">
+                  <label for="number-max">Máximo *</label>
+                  <input id="number-max" type="number" step="any" placeholder="100" />
+                </div>
+              </div>
+            </div>
+
+            <div id="config-currency" class="config-section" style="display: none;">
+              <div class="field-group">
+                <div class="field">
+                  <label for="currency-min">Mínimo (€) *</label>
+                  <input id="currency-min" type="number" step="any" placeholder="0" />
+                </div>
+                <div class="field">
+                  <label for="currency-max">Máximo (€) *</label>
+                  <input id="currency-max" type="number" step="any" placeholder="10000" />
+                </div>
+              </div>
+            </div>
+
+            <div id="config-date" class="config-section" style="display: none;">
+              <div class="field-group">
+                <div class="field">
+                  <label for="date-min">Fecha mínima *</label>
+                  <input id="date-min" type="date" />
+                </div>
+                <div class="field">
+                  <label for="date-max">Fecha máxima *</label>
+                  <input id="date-max" type="date" />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" id="cancel-modal" class="btn-secondary">Cancelar</button>
+              <button type="submit" class="btn">Añadir columna</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal para crear expedientes -->
+      <div id="create-expedients-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Crear Expedientes</h3>
+            <button id="close-create-expedients-modal" class="btn-close">&times;</button>
+          </div>
+          <form id="create-expedients-form" class="column-form">
+            <p class="help-text" style="margin-top: 0;">Configura los parámetros para generar expedientes</p>
+
+            <!-- Paso 1: Información básica -->
+            <div class="field">
+              <label for="num-expedients">Número de expedientes</label>
+              <input id="num-expedients" type="number" min="1" max="1000" value="10" />
+              <p class="help-text">Cantidad de expedientes a generar</p>
+            </div>
+
+            <div class="field">
+              <label for="entity-name">Nombre de la entidad</label>
+              <input id="entity-name" type="text" placeholder="Ej. Ayuntamiento de Zaragoza" />
+            </div>
+
+            <div class="field">
+              <label for="procedure-name">Nombre del procedimiento</label>
+              <input id="procedure-name" type="text" placeholder="Ej. Licencia de obras" />
+            </div>
+
+            <!-- Paso 2: Asuntos libres -->
+            <div class="field">
+              <label style="font-weight: 600;">Asuntos libres</label>
+              <p class="help-text">Define los asuntos y su porcentaje de distribución</p>
+              <div id="asunto-options">
+                <div class="option-row">
+                  <input type="text" class="asunto-label" placeholder="Nombre del asunto" />
+                  <input type="number" class="asunto-percent" min="0" max="100" placeholder="%" />
+                  <button type="button" class="btn-remove-option">×</button>
+                </div>
+              </div>
+              <button type="button" id="add-asunto-btn" class="btn-secondary">+ Añadir asunto</button>
+              <p class="help-text">La suma de porcentajes debe ser 100% (si defines asuntos)</p>
+            </div>
+
+            <!-- Paso 3: Unidades gestoras -->
+            <div class="field">
+              <label style="font-weight: 600;">Unidades gestoras</label>
+              <p class="help-text">Define las unidades gestoras y su porcentaje de distribución</p>
+              <div id="unidad-options">
+                <div class="option-row">
+                  <input type="text" class="unidad-label" placeholder="Nombre de la unidad" />
+                  <input type="number" class="unidad-percent" min="0" max="100" placeholder="%" />
+                  <button type="button" class="btn-remove-option">×</button>
+                </div>
+              </div>
+              <button type="button" id="add-unidad-btn" class="btn-secondary">+ Añadir unidad</button>
+              <p class="help-text">La suma de porcentajes debe ser 100% (si defines unidades)</p>
+            </div>
+
+            <!-- Paso 4: Rango de fechas -->
+            <div class="field">
+              <label style="font-weight: 600;">Rango de fechas</label>
+              <div class="field-group">
+                <div class="field">
+                  <label for="date-from">Fecha desde</label>
+                  <input id="date-from" type="date" />
+                </div>
+                <div class="field">
+                  <label for="date-to">Fecha hasta</label>
+                  <input id="date-to" type="date" />
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" id="cancel-create-expedients" class="btn-secondary">Cancelar</button>
+              <button type="submit" class="btn">Generar Expedientes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal para tabla de expedientes creados -->
+      <div id="expedients-table-modal" class="modal">
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <h3>Expedientes Creados</h3>
+            <button id="close-expedients-table-modal" class="btn-close">&times;</button>
+          </div>
+          <div class="transpose-content">
+            <div class="transpose-actions">
+              <button id="export-expedients-csv" type="button" class="btn">
+                📥 Exportar a CSV
+              </button>
+            </div>
+            <div id="expedients-table-container" class="transposed-table-container">
+              <!-- La tabla de expedientes se renderiza aquí -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- SheetJS para leer archivos Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
