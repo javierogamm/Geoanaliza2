@@ -1,4 +1,10 @@
 {
+  "functions": {
+    "api/points.ts": {
+      "includeFiles": "backend/**"
+    }
+  },
+  "outputDirectory": "frontend",
   "rewrites": [
     {
       "source": "/api/(.*)",
