@@ -4,6 +4,7 @@
       "includeFiles": "backend/**"
     }
   },
+  "outputDirectory": "frontend",
   "rewrites": [
     {
       "source": "/api/(.*)",

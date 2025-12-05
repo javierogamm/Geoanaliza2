@@ -25,3 +25,7 @@
 ## Versión 1.2.3 - 2025-12-05
 - Se agrega un script `postinstall` en la raíz para instalar automáticamente las dependencias del backend durante el build en
   Vercel, garantizando que la función `/api/points` tenga disponibles sus módulos al desplegar.
+
+## Versión 1.2.4 - 2025-12-05
+- Se define `outputDirectory` en `vercel.json` apuntando a la carpeta `frontend`, evitando fallos de despliegue por falta de
+  directorio `public` tras el comando de build en Vercel.
