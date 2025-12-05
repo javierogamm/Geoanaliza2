@@ -41,8 +41,3 @@
 - Se añaden trazas detalladas en la función serverless y en las capas de routing y servicios (Nominatim y Overpass) para
   registrar pasos, tiempos y parámetros de cada petición, facilitando la detección de dónde falla la obtención de puntos
   en Vercel.
-
-## Versión 1.2.7 - 2025-12-05
-- La función serverless `/api/points` ahora localiza el módulo de Express entre varias rutas candidatas (incluyendo las rutas
-  empaquetadas por Vercel) y devuelve un error descriptivo si no puede cargarlo, evitando 500 silenciosos por fallos de
-  resolución de paths durante el despliegue.

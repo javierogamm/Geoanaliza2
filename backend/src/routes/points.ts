@@ -41,6 +41,12 @@ router.get('/', async (req, res) => {
       boundingBox: cityInfo.boundingBox
     });
 
+    console.info('[api/points] City resolved', {
+      requestedCity: city,
+      resolvedCity: cityInfo.city,
+      boundingBox: cityInfo.boundingBox
+    });
+
     let searchBoundingBox: BoundingBox = cityInfo.boundingBox;
     let resolvedNeighbourhood: string | null = null;
 
