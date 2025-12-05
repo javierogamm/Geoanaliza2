@@ -18,11 +18,14 @@ router.get('/', async (req, res) => {
   const neighbourhood =
     typeof req.query.neighbourhood === 'string' ? req.query.neighbourhood.trim() : '';
   const limit = parseLimit(req.query.limit);
+  const startedAt = Date.now();
 
   console.info('[api/points] Received request', {
     city,
     neighbourhood,
-    limit
+    limit,
+    query: req.query,
+    path: req.originalUrl
   });
 
   if (!city) {
@@ -32,16 +35,40 @@ router.get('/', async (req, res) => {
   try {
     const cityInfo = await fetchCityBoundingBox(city);
 
+    console.info('[api/points] City resolved', {
+      requestedCity: city,
+      resolvedCity: cityInfo.city,
+      boundingBox: cityInfo.boundingBox
+    });
+
     let searchBoundingBox: BoundingBox = cityInfo.boundingBox;
     let resolvedNeighbourhood: string | null = null;
 
     if (neighbourhood) {
+      console.info('[api/points] Resolving neighbourhood', {
+        city: cityInfo.city,
+        neighbourhood
+      });
       const areaBox = await fetchNeighbourhoodBoundingBox(cityInfo.city, neighbourhood);
       if (areaBox) {
         searchBoundingBox = areaBox;
         resolvedNeighbourhood = neighbourhood;
+        console.info('[api/points] Neighbourhood bounding box applied', {
+          neighbourhood,
+          boundingBox: areaBox
+        });
+      } else {
+        console.warn('[api/points] Neighbourhood not found, using city bounding box', {
+          neighbourhood,
+          city: cityInfo.city
+        });
       }
     }
+
+    console.info('[api/points] Querying Overpass', {
+      limit,
+      boundingBox: searchBoundingBox
+    });
 
     const { totalAvailable, points } = await queryOverpassForNodes(searchBoundingBox, limit);
 
@@ -53,11 +80,14 @@ router.get('/', async (req, res) => {
       points
     };
 
+    const durationMs = Date.now() - startedAt;
+
     console.info('[api/points] Response ready', {
       city: payload.city,
       neighbourhood: payload.neighbourhood,
       returned: payload.returned,
-      totalAvailable: payload.totalAvailable
+      totalAvailable: payload.totalAvailable,
+      durationMs
     });
 
     return res.json(payload);
@@ -65,12 +95,15 @@ router.get('/', async (req, res) => {
     const message =
       error instanceof Error ? error.message : 'No se pudo completar la búsqueda de puntos';
 
+    const durationMs = Date.now() - startedAt;
+
     console.error('[api/points] Error while resolving request', {
       city,
       neighbourhood,
       limit,
       message,
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
+      durationMs
     });
 
     return res.status(500).json({ error: message });
