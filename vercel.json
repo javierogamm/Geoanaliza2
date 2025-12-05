@@ -1,8 +1,14 @@
 {
+  "functions": {
+    "api/points.ts": {
+      "includeFiles": "backend/dist/**"
+    }
+  },
+  "outputDirectory": "frontend",
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://appgeoanaliza.onrender.com/api/$1"
+      "destination": "/api/$1"
     },
     {
       "source": "/(.*)",
