@@ -1,4 +1,4 @@
-import { fetchPoints } from './api.js';
+import { fetchPoints, fetchPointsInBoundingBox } from './api.js';
 import {
   clearResults,
   renderMeta,
@@ -21,11 +21,23 @@ const cityInput = document.getElementById('city');
 const neighbourhoodInput = document.getElementById('neighbourhood');
 const limitInput = document.getElementById('limit');
 const exportButton = document.getElementById('export-btn');
+const areaMapContainer = document.getElementById('area-map');
+const drawAreaButton = document.getElementById('draw-area-btn');
+const resetAreaButton = document.getElementById('reset-area-btn');
+const searchAreaButton = document.getElementById('search-area-btn');
+const areaStatus = document.getElementById('area-status');
 
 // Variable para guardar los últimos puntos y poder re-renderizar
 let lastPointsData = null;
 // Variable para guardar puntos ficticios generados
 let mockPoints = [];
+// Variables para la selección de área en mapa
+let mapInstance = null;
+let drawnArea = null;
+let drawStart = null;
+let isDrawing = false;
+let selectionEnabled = false;
+let areaBounds = null;
 
 const parseLimit = (value) => {
   const parsed = parseInt(value, 10);
@@ -52,6 +64,12 @@ function generateMockPoints(numRows) {
       source: 'mock'
     });
   }
+}
+
+function setAreaStatus(message, isError = false) {
+  if (!areaStatus) return;
+  areaStatus.textContent = message;
+  areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
 }
 
 // Función para generar puntos desde expedientes importados
@@ -142,6 +160,10 @@ initTranspose(getCurrentPoints, getCustomColumnsDataMap);
 // Inicializar el módulo de crear expedientes
 initCreateExpedients();
 
+if (areaMapContainer) {
+  initAreaMap();
+}
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -198,3 +220,143 @@ exportButton.addEventListener('click', () => {
     setStatus('No se pudo exportar el CSV', true);
   }
 });
+
+if (drawAreaButton) {
+  drawAreaButton.addEventListener('click', () => {
+    selectionEnabled = true;
+    drawStart = null;
+    isDrawing = false;
+    if (areaMapContainer) {
+      areaMapContainer.classList.add('drawing');
+    }
+    setAreaStatus('Haz clic y arrastra sobre el mapa para delimitar el área.');
+  });
+}
+
+if (resetAreaButton) {
+  resetAreaButton.addEventListener('click', () => {
+    clearAreaSelection();
+    setAreaStatus('Área reiniciada. Pulsa "Dibujar área" para seleccionar nuevamente.');
+  });
+}
+
+if (searchAreaButton) {
+  searchAreaButton.addEventListener('click', () => {
+    performAreaSearch();
+  });
+}
+
+function clearAreaSelection() {
+  areaBounds = null;
+  drawStart = null;
+  isDrawing = false;
+  selectionEnabled = false;
+  if (mapInstance && drawnArea) {
+    mapInstance.removeLayer(drawnArea);
+    drawnArea = null;
+  }
+  if (areaMapContainer) {
+    areaMapContainer.classList.remove('drawing');
+  }
+}
+
+function initAreaMap() {
+  if (!window.L || !areaMapContainer) {
+    setAreaStatus('El mapa no pudo cargarse.');
+    return;
+  }
+
+  mapInstance = L.map(areaMapContainer, {
+    zoomControl: true,
+    scrollWheelZoom: true
+  }).setView([40.4168, -3.7038], 5);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Datos geográficos © OpenStreetMap contributors'
+  }).addTo(mapInstance);
+
+  const finishDrawing = (event) => {
+    if (!isDrawing || !drawnArea || !event?.latlng) {
+      return;
+    }
+    isDrawing = false;
+    selectionEnabled = false;
+    mapInstance.dragging.enable();
+    if (areaMapContainer) {
+      areaMapContainer.classList.remove('drawing');
+    }
+
+    areaBounds = L.latLngBounds(drawStart, event.latlng);
+    drawnArea.setBounds(areaBounds);
+    setAreaStatus('Área preparada. Pulsa "Buscar en área" para obtener puntos.');
+  };
+
+  mapInstance.on('mousedown', (event) => {
+    if (!selectionEnabled) return;
+
+    drawStart = event.latlng;
+    isDrawing = true;
+    areaBounds = null;
+
+    if (drawnArea) {
+      mapInstance.removeLayer(drawnArea);
+    }
+    drawnArea = L.rectangle([drawStart, drawStart], {
+      color: '#f59e0b',
+      weight: 2,
+      fillColor: '#f59e0b',
+      fillOpacity: 0.15
+    }).addTo(mapInstance);
+
+    mapInstance.dragging.disable();
+  });
+
+  mapInstance.on('mousemove', (event) => {
+    if (!isDrawing || !drawStart || !drawnArea) return;
+
+    const bounds = L.latLngBounds(drawStart, event.latlng);
+    drawnArea.setBounds(bounds);
+  });
+
+  mapInstance.on('mouseup', finishDrawing);
+  mapInstance.on('mouseout', finishDrawing);
+
+  setAreaStatus('Pulsa "Dibujar área" y arrastra en el mapa para delimitar la búsqueda.');
+}
+
+async function performAreaSearch() {
+  if (!areaBounds) {
+    setAreaStatus('Dibuja un rectángulo en el mapa antes de buscar.', true);
+    setStatus('Selecciona un área para buscar puntos.', true);
+    return;
+  }
+
+  const limit = parseLimit(limitInput.value);
+  const bbox = [
+    areaBounds.getSouth(),
+    areaBounds.getWest(),
+    areaBounds.getNorth(),
+    areaBounds.getEast()
+  ];
+
+  setStatus('Buscando puntos en el área seleccionada...');
+
+  try {
+    const data = await fetchPointsInBoundingBox({ bbox, limit, city: cityInput.value.trim() });
+    lastPointsData = data;
+    mockPoints = [];
+    renderMeta({
+      city: data.city,
+      neighbourhood: data.neighbourhood,
+      totalAvailable: data.totalAvailable,
+      returned: data.returned,
+      areaLabel: data.areaLabel || 'Área seleccionada'
+    });
+    renderPoints(data.points);
+    setStatus('');
+    setAreaStatus('Resultados cargados. Puedes volver a dibujar para refinar.');
+  } catch (error) {
+    setStatus(error.message || 'No se pudo obtener puntos', true);
+    setAreaStatus('No se pudo obtener puntos para el área seleccionada.', true);
+  }
+}
