@@ -41,22 +41,3 @@
 - Se añaden trazas detalladas en la función serverless y en las capas de routing y servicios (Nominatim y Overpass) para
   registrar pasos, tiempos y parámetros de cada petición, facilitando la detección de dónde falla la obtención de puntos
   en Vercel.
-
-## Versión 1.2.7 - 2025-12-05
-- La función serverless `/api/points` ahora localiza el módulo de Express entre varias rutas candidatas (incluyendo las rutas
-  empaquetadas por Vercel) y devuelve un error descriptivo si no puede cargarlo, evitando 500 silenciosos por fallos de
-  resolución de paths durante el despliegue.
-
-## Versión 1.2.8 - 2025-12-05
-- Añadida búsqueda por área delimitada en mapa con Leaflet, permitiendo dibujar un rectángulo y consultar puntos dentro de la
-  zona seleccionada desde el frontend.
-- Ampliado el endpoint `/api/points` para aceptar búsquedas con bounding box y reutilizar Overpass sin necesidad de resolver
-  ciudad o barrio, manteniendo la compatibilidad con la búsqueda tradicional.
-- Ajustados estilos y textos de interfaz para guiar la selección y consulta de áreas, mostrando el alcance de la búsqueda en
-  los metadatos de resultados.
-
-## Versión 1.2.9 - 2025-12-05
-- Se asegura la carga de Leaflet de forma dinámica en el frontend, mostrando mensajes de error claros si falla y forzando la
-  recomputación de tamaño del mapa para que se renderice correctamente en Vercel.
-- Se ajusta el estilo del contenedor del mapa para ocupar el ancho completo del panel y facilitar la interacción al dibujar
-  el área.

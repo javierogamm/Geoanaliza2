@@ -62,62 +62,82 @@ const parseBoundingBox = (query: Record<string, unknown>): BoundingBox | null =>
   return null;
 };
 
+const isValidLatitude = (value: number): boolean => value >= -90 && value <= 90;
+const isValidLongitude = (value: number): boolean => value >= -180 && value <= 180;
+
+const parseBoundingBox = (query: Record<string, unknown>): BoundingBox | null => {
+  if (typeof query.bbox === 'string') {
+    const parts = query.bbox
+      .split(',')
+      .map((value) => Number.parseFloat(value.trim()))
+      .filter((value) => !Number.isNaN(value));
+
+    if (parts.length === 4) {
+      const [south, west, north, east] = parts;
+      if (
+        isValidLatitude(south) &&
+        isValidLatitude(north) &&
+        isValidLongitude(west) &&
+        isValidLongitude(east) &&
+        north > south &&
+        east !== west
+      ) {
+        return { south, west, north, east };
+      }
+    }
+  }
+
+  const south = typeof query.south === 'string' ? Number.parseFloat(query.south) : null;
+  const west = typeof query.west === 'string' ? Number.parseFloat(query.west) : null;
+  const north = typeof query.north === 'string' ? Number.parseFloat(query.north) : null;
+  const east = typeof query.east === 'string' ? Number.parseFloat(query.east) : null;
+
+  if (
+    south !== null &&
+    west !== null &&
+    north !== null &&
+    east !== null &&
+    ![south, west, north, east].some((value) => Number.isNaN(value)) &&
+    isValidLatitude(south) &&
+    isValidLatitude(north) &&
+    isValidLongitude(west) &&
+    isValidLongitude(east) &&
+    north > south &&
+    east !== west
+  ) {
+    return { south, west, north, east };
+  }
+
+  return null;
+};
+
 router.get('/', async (req, res) => {
   const city = typeof req.query.city === 'string' ? req.query.city.trim() : '';
   const neighbourhood =
     typeof req.query.neighbourhood === 'string' ? req.query.neighbourhood.trim() : '';
   const limit = parseLimit(req.query.limit);
-  const boundingBox = parseBoundingBox(req.query);
   const startedAt = Date.now();
 
   console.info('[api/points] Received request', {
     city,
     neighbourhood,
     limit,
-    boundingBox,
     query: req.query,
     path: req.originalUrl
   });
 
-  if (!city && !boundingBox) {
+  if (!city) {
     return res.status(400).json({ error: 'El parámetro city es obligatorio' });
   }
 
   try {
-    if (boundingBox) {
-      const labelledCity = city || 'Área seleccionada';
-      console.info('[api/points] Using provided bounding box', {
-        boundingBox,
-        limit,
-        city: labelledCity
-      });
-
-      const { totalAvailable, points } = await queryOverpassForNodes(boundingBox, limit);
-
-      const payload = {
-        city: labelledCity,
-        neighbourhood: null as string | null,
-        area: boundingBox,
-        areaLabel: 'Área delimitada en el mapa',
-        totalAvailable,
-        returned: points.length,
-        points
-      };
-
-      const durationMs = Date.now() - startedAt;
-
-      console.info('[api/points] Area search response ready', {
-        city: payload.city,
-        returned: payload.returned,
-        totalAvailable: payload.totalAvailable,
-        durationMs,
-        boundingBox
-      });
-
-      return res.json(payload);
-    }
-
     const cityInfo = await fetchCityBoundingBox(city);
+
+    console.info('[api/points] City resolved', {
+      requestedCity: city,
+      resolvedCity: cityInfo.city,
+      boundingBox: cityInfo.boundingBox
+    });
 
     console.info('[api/points] City resolved', {
       requestedCity: city,

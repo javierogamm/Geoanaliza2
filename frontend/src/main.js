@@ -38,7 +38,6 @@ let drawStart = null;
 let isDrawing = false;
 let selectionEnabled = false;
 let areaBounds = null;
-let leafletReady = false;
 
 const parseLimit = (value) => {
   const parsed = parseInt(value, 10);
@@ -162,7 +161,7 @@ initTranspose(getCurrentPoints, getCustomColumnsDataMap);
 initCreateExpedients();
 
 if (areaMapContainer) {
-  prepareAreaMap();
+  initAreaMap();
 }
 
 form.addEventListener('submit', async (event) => {
@@ -261,54 +260,6 @@ function clearAreaSelection() {
   }
 }
 
-function prepareAreaMap() {
-  if (!areaMapContainer) return;
-
-  loadLeaflet()
-    .then(() => {
-      initAreaMap();
-    })
-    .catch((error) => {
-      setAreaStatus(error.message || 'El mapa no pudo cargarse.', true);
-    });
-}
-
-function loadLeaflet() {
-  if (leafletReady || window.L) {
-    leafletReady = true;
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve, reject) => {
-    const existingScript = document.querySelector('script[data-leaflet="true"]');
-    if (existingScript && existingScript.dataset.loaded === 'true') {
-      leafletReady = true;
-      resolve();
-      return;
-    }
-
-    const script = existingScript || document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-    script.crossOrigin = '';
-    script.dataset.leaflet = 'true';
-
-    script.onload = () => {
-      leafletReady = true;
-      script.dataset.loaded = 'true';
-      resolve();
-    };
-
-    script.onerror = () => {
-      reject(new Error('No se pudo cargar el mapa. Comprueba tu conexión e inténtalo de nuevo.'));
-    };
-
-    if (!existingScript) {
-      document.body.appendChild(script);
-    }
-  });
-}
-
 function initAreaMap() {
   if (!window.L || !areaMapContainer) {
     setAreaStatus('El mapa no pudo cargarse.');
@@ -371,13 +322,6 @@ function initAreaMap() {
   mapInstance.on('mouseout', finishDrawing);
 
   setAreaStatus('Pulsa "Dibujar área" y arrastra en el mapa para delimitar la búsqueda.');
-
-  // Asegurar que el mapa se pinta correctamente tras la inicialización
-  setTimeout(() => {
-    if (mapInstance) {
-      mapInstance.invalidateSize();
-    }
-  }, 150);
 }
 
 async function performAreaSearch() {

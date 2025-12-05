@@ -90,7 +90,6 @@ h1 {
 
 .area-map {
   height: 320px;
-  width: 100%;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--border);
