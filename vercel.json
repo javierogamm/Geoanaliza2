@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/points.ts": {
-      "includeFiles": "backend/**"
+      "includeFiles": "backend/dist/**"
     }
   },
   "outputDirectory": "frontend",
