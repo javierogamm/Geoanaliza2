@@ -17,9 +17,20 @@ export function setStatus(message, isError = false) {
   statusMessage.style.color = isError ? '#f87171' : '';
 }
 
-export function renderMeta({ city, neighbourhood, totalAvailable, returned, areaLabel }) {
+export function renderMeta({
+  city,
+  neighbourhood,
+  totalAvailable,
+  returned,
+  areaLabel,
+  boundingBox
+}) {
   const scope = areaLabel ? areaLabel : neighbourhood ? `${neighbourhood} · ${city}` : city;
-  resultsMeta.textContent = `${returned} de ${totalAvailable || returned} puntos para ${scope}`;
+  const base = `${returned} de ${totalAvailable || returned} puntos para ${scope}`;
+  const bboxLabel = boundingBox
+    ? ` (S:${boundingBox.south.toFixed(5)} W:${boundingBox.west.toFixed(5)} N:${boundingBox.north.toFixed(5)} E:${boundingBox.east.toFixed(5)})`
+    : '';
+  resultsMeta.textContent = `${base}${bboxLabel}`;
 }
 
 export function renderPoints(points) {
