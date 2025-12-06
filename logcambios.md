@@ -41,3 +41,9 @@
 - Se añaden trazas detalladas en la función serverless y en las capas de routing y servicios (Nominatim y Overpass) para
   registrar pasos, tiempos y parámetros de cada petición, facilitando la detección de dónde falla la obtención de puntos
   en Vercel.
+
+## Versión 1.3.0 - 2025-12-06
+- Se permite consultar puntos solo con el área dibujada en el mapa, infiriendo el municipio automáticamente cuando no se
+  envía el campo de ciudad en la búsqueda por `bbox`.
+- Se añade el despliegue de las coordenadas del rectángulo seleccionado directamente debajo del mapa para ofrecer
+  contexto inmediato al usuario al preparar la consulta geográfica.

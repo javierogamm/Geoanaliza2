@@ -26,6 +26,7 @@ const drawAreaButton = document.getElementById('draw-area-btn');
 const resetAreaButton = document.getElementById('reset-area-btn');
 const searchAreaButton = document.getElementById('search-area-btn');
 const areaStatus = document.getElementById('area-status');
+const areaCoordinates = document.getElementById('area-coordinates');
 
 // Variable para guardar los últimos puntos y poder re-renderizar
 let lastPointsData = null;
@@ -72,10 +73,20 @@ function setAreaStatus(message, isError = false) {
   areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
 }
 
-function setAreaStatus(message, isError = false) {
-  if (!areaStatus) return;
-  areaStatus.textContent = message;
-  areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
+function setAreaCoordinates(bounds) {
+  if (!areaCoordinates) return;
+
+  if (!bounds) {
+    areaCoordinates.textContent = '';
+    return;
+  }
+
+  const south = bounds.getSouth().toFixed(5);
+  const west = bounds.getWest().toFixed(5);
+  const north = bounds.getNorth().toFixed(5);
+  const east = bounds.getEast().toFixed(5);
+
+  areaCoordinates.textContent = `SO: ${south}, ${west} · NE: ${north}, ${east}`;
 }
 
 // Función para generar puntos desde expedientes importados
@@ -269,6 +280,8 @@ function clearAreaSelection() {
   if (areaMapContainer) {
     areaMapContainer.classList.remove('drawing');
   }
+
+  setAreaCoordinates(null);
 }
 
 function initAreaMap() {
@@ -300,6 +313,7 @@ function initAreaMap() {
     areaBounds = L.latLngBounds(drawStart, event.latlng);
     drawnArea.setBounds(areaBounds);
     setAreaStatus('Área preparada. Pulsa "Buscar en área" para obtener puntos.');
+    setAreaCoordinates(areaBounds);
   };
 
   mapInstance.on('mousedown', (event) => {

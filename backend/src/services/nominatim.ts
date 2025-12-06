@@ -148,3 +148,41 @@ export const fetchNeighbourhoodBoundingBox = async (
 
   return box;
 };
+
+export const resolveCityFromBoundingBox = async (bbox: BoundingBox): Promise<string | null> => {
+  const centerLat = (bbox.north + bbox.south) / 2;
+  const centerLon = (bbox.east + bbox.west) / 2;
+  const url = new URL(NOMINATIM_REVERSE_URL);
+  url.searchParams.set('format', 'jsonv2');
+  url.searchParams.set('lat', centerLat.toString());
+  url.searchParams.set('lon', centerLon.toString());
+  url.searchParams.set('zoom', '12');
+  url.searchParams.set('addressdetails', '1');
+
+  const startedAt = Date.now();
+  console.info('[nominatim] Resolving city from bbox', {
+    bbox,
+    url: url.toString()
+  });
+
+  const response = await scheduleNominatim(() => fetch(url.toString(), withUserAgent()));
+  console.info('[nominatim] Reverse response received', {
+    status: response.status,
+    statusText: response.statusText,
+    durationMs: Date.now() - startedAt
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const result = (await response.json()) as NominatimResult | null;
+  const inferred = result?.address ? extractCityFromAddress(result.address) : null;
+
+  console.info('[nominatim] City inferred from bbox', {
+    bbox,
+    inferredCity: inferred
+  });
+
+  return inferred;
+};
