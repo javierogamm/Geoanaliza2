@@ -4,6 +4,7 @@
       "includeFiles": "backend/dist/**"
     }
   },
+  "buildCommand": "npm run build",
   "outputDirectory": "frontend",
   "rewrites": [
     {

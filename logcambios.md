@@ -47,3 +47,7 @@
   envía el campo de ciudad en la búsqueda por `bbox`.
 - Se añade el despliegue de las coordenadas del rectángulo seleccionado directamente debajo del mapa para ofrecer
   contexto inmediato al usuario al preparar la consulta geográfica.
+
+## Versión 1.3.1 - 2025-12-06
+- Se fuerza el comando de build en Vercel para compilar el backend antes de desplegar y se elimina la carga dinámica de la
+  versión TypeScript sin compilar, evitando errores en producción cuando `backend/dist` no existe.

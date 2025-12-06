@@ -3,16 +3,21 @@ import fs from 'fs';
 import path from 'path';
 
 const distAppPath = path.join(__dirname, '../backend/dist/app.js');
-const srcAppPath = path.join(__dirname, '../backend/src/app');
-const appModulePath = fs.existsSync(distAppPath) ? distAppPath : srcAppPath;
-// eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
-const app = require(appModulePath).default;
 
-console.info(`[api/points] Loading Express app from ${appModulePath}`);
+if (!fs.existsSync(distAppPath)) {
+  throw new Error(
+    `[api/points] No se encontró ${distAppPath}. Ejecuta \"npm run build\" para compilar el backend antes del despliegue.`
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+const app = require(distAppPath).default;
+
+console.info(`[api/points] Loading Express app from ${distAppPath}`);
 
 export default function handler(req: IncomingMessage, res: ServerResponse) {
   const startedAt = Date.now();
-  console.info(`[api/points] Incoming request: ${req.method} ${req.url} (app: ${appModulePath})`);
+  console.info(`[api/points] Incoming request: ${req.method} ${req.url} (app: ${distAppPath})`);
 
   res.on('finish', () => {
     const durationMs = Date.now() - startedAt;
