@@ -27,6 +27,8 @@ const resetAreaButton = document.getElementById('reset-area-btn');
 const searchAreaButton = document.getElementById('search-area-btn');
 const areaStatus = document.getElementById('area-status');
 const areaCoordinatesContainer = document.getElementById('area-coordinates');
+const MAX_LIMIT = 1000;
+const BATCH_SIZE = 100;
 
 // Variable para guardar los últimos puntos y poder re-renderizar
 let lastPointsData = null;
@@ -54,8 +56,82 @@ const convertBoundsToBoundingBox = (bounds) => ({
 const parseLimit = (value) => {
   const parsed = parseInt(value, 10);
   if (Number.isNaN(parsed) || parsed <= 0) return 20;
-  if (parsed > 100) return 100;
+  if (parsed > MAX_LIMIT) return MAX_LIMIT;
   return parsed;
+};
+
+const mergePointsById = (currentPoints, incomingPoints = []) => {
+  const registry = new Map(currentPoints.map((point) => [point.id, point]));
+  incomingPoints.forEach((point) => {
+    registry.set(point.id, point);
+  });
+  return Array.from(registry.values());
+};
+
+const fetchPointsInBatches = async ({ limit, requestFactory }) => {
+  const safeLimit = Math.max(1, Math.min(limit, MAX_LIMIT));
+  const plannedBatches = Math.max(1, Math.ceil(safeLimit / BATCH_SIZE));
+  let collectedPoints = [];
+
+  const aggregatedMeta = {
+    city: null,
+    neighbourhood: null,
+    boundingBox: null,
+    areaLabel: undefined,
+    totalAvailable: 0
+  };
+
+  for (let batchIndex = 0; batchIndex < plannedBatches; batchIndex += 1) {
+    const remaining = safeLimit - collectedPoints.length;
+    if (remaining <= 0) break;
+
+    setStatus(
+      `Buscando puntos en OpenStreetMap... (bloque ${batchIndex + 1}/${plannedBatches})`,
+      false,
+      { loading: true }
+    );
+
+    const data = await requestFactory(Math.min(BATCH_SIZE, remaining));
+
+    aggregatedMeta.city ??= data.city ?? null;
+    aggregatedMeta.neighbourhood ??= data.neighbourhood ?? null;
+    aggregatedMeta.boundingBox ??= data.boundingBox ?? null;
+    aggregatedMeta.areaLabel ??= data.areaLabel;
+    aggregatedMeta.totalAvailable = Math.max(aggregatedMeta.totalAvailable, data.totalAvailable || 0);
+
+    collectedPoints = mergePointsById(collectedPoints, data.points || []);
+
+    const targetForRender = aggregatedMeta.totalAvailable
+      ? Math.min(aggregatedMeta.totalAvailable, safeLimit)
+      : safeLimit;
+
+    renderMeta({
+      city: aggregatedMeta.city || '',
+      neighbourhood: aggregatedMeta.neighbourhood || '',
+      totalAvailable: aggregatedMeta.totalAvailable || targetForRender,
+      returned: collectedPoints.length,
+      areaLabel: aggregatedMeta.areaLabel,
+      boundingBox: aggregatedMeta.boundingBox
+    });
+    renderPoints(collectedPoints);
+
+    if (typeof plotPointsOnMap === 'function') {
+      plotPointsOnMap(collectedPoints);
+    }
+
+    if (collectedPoints.length >= targetForRender) {
+      break;
+    }
+  }
+
+  setStatus('');
+
+  return {
+    ...aggregatedMeta,
+    totalAvailable: aggregatedMeta.totalAvailable || collectedPoints.length,
+    returned: collectedPoints.length,
+    points: collectedPoints
+  };
 };
 
 // Función para verificar si hay datos cargados
@@ -241,10 +317,12 @@ async function performSearch() {
     return;
   }
 
-  setStatus('Buscando puntos en OpenStreetMap...');
-
   try {
-    const data = await fetchPoints({ city, neighbourhood, limit });
+    const data = await fetchPointsInBatches({
+      limit,
+      requestFactory: (chunkLimit) => fetchPoints({ city, neighbourhood, limit: chunkLimit })
+    });
+
     lastPointsData = data; // Guardamos los datos para re-renderizar
     mockPoints = []; // Limpiar puntos ficticios cuando se cargan datos reales
     renderMeta({
@@ -255,10 +333,11 @@ async function performSearch() {
       boundingBox: data.boundingBox
     });
     renderPoints(data.points);
-    plotPointsOnMap(data.points);
-    setStatus('');
+    if (typeof plotPointsOnMap === 'function') {
+      plotPointsOnMap(data.points);
+    }
   } catch (error) {
-    setStatus(error.message || 'No se pudo obtener puntos', true);
+    setStatus(error.message || 'No se pudo obtener puntos', true, { loading: false });
   }
 }
 
@@ -480,10 +559,15 @@ async function performAreaSearch() {
     areaBounds.getEast()
   ];
 
-  setStatus('Buscando puntos en el área seleccionada...');
+  setAreaStatus('Consultando el área en bloques de 100 puntos para evitar bloqueos...');
 
   try {
-    const data = await fetchPointsInBoundingBox({ bbox, limit, city: cityInput.value.trim() });
+    const data = await fetchPointsInBatches({
+      limit,
+      requestFactory: (chunkLimit) =>
+        fetchPointsInBoundingBox({ bbox, limit: chunkLimit, city: cityInput.value.trim() })
+    });
+
     lastPointsData = data;
     mockPoints = [];
     renderMeta({
@@ -495,14 +579,13 @@ async function performAreaSearch() {
       boundingBox: data.boundingBox
     });
     renderPoints(data.points);
-    setStatus('');
     if (data.boundingBox) {
       showBoundingBoxStatus(data.boundingBox, 'Resultados cargados en el área');
     } else {
       setAreaStatus('Resultados cargados. Puedes volver a dibujar para refinar.');
     }
   } catch (error) {
-    setStatus(error.message || 'No se pudo obtener puntos', true);
+    setStatus(error.message || 'No se pudo obtener puntos', true, { loading: false });
     setAreaStatus('No se pudo obtener puntos para el área seleccionada.', true);
   }
 }
