@@ -49,3 +49,11 @@
   búsqueda sobre el mapa.
 - Mantiene la compatibilidad del despliegue en Vercel utilizando el mismo endpoint `/api/points` que reutiliza la
   aplicación del backend.
+
+## Versión 1.3.0 - 2025-12-07
+- Se sustituye el rectángulo por un flujo de dibujo de polígonos, permitiendo definir cualquier área añadiendo vértices con
+  clics sucesivos y cerrando sobre el primer punto.
+- Se muestra bajo el mapa la lista completa de coordenadas (latitud, longitud) de cada vértice seleccionado para facilitar
+  la trazabilidad de la búsqueda.
+- Se mantienen intactas las configuraciones de despliegue en Vercel para asegurar que el nuevo flujo no afecte al
+  funcionamiento actual en producción.

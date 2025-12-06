@@ -26,6 +26,7 @@ const drawAreaButton = document.getElementById('draw-area-btn');
 const resetAreaButton = document.getElementById('reset-area-btn');
 const searchAreaButton = document.getElementById('search-area-btn');
 const areaStatus = document.getElementById('area-status');
+const areaCoordinatesContainer = document.getElementById('area-coordinates');
 
 // Variable para guardar los últimos puntos y poder re-renderizar
 let lastPointsData = null;
@@ -34,10 +35,11 @@ let mockPoints = [];
 // Variables para la selección de área en mapa
 let mapInstance = null;
 let drawnArea = null;
-let drawStart = null;
-let isDrawing = false;
+let previewPath = null;
 let selectionEnabled = false;
 let areaBounds = null;
+let polygonVertices = [];
+let vertexMarkers = [];
 
 const formatBoundingBoxLabel = (bbox) =>
   `S:${bbox.south.toFixed(5)} W:${bbox.west.toFixed(5)} N:${bbox.north.toFixed(5)} E:${bbox.east.toFixed(5)}`;
@@ -80,6 +82,35 @@ function setAreaStatus(message, isError = false) {
   if (!areaStatus) return;
   areaStatus.textContent = message;
   areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
+}
+
+function renderAreaCoordinates(points = []) {
+  if (!areaCoordinatesContainer) return;
+
+  areaCoordinatesContainer.innerHTML = '';
+
+  const title = document.createElement('h3');
+  title.textContent = 'Coordenadas del área';
+  areaCoordinatesContainer.appendChild(title);
+
+  if (!points.length) {
+    const hint = document.createElement('p');
+    hint.className = 'meta';
+    hint.textContent = 'Añade vértices haciendo clic en el mapa para ver sus coordenadas.';
+    areaCoordinatesContainer.appendChild(hint);
+    return;
+  }
+
+  const list = document.createElement('ol');
+  list.className = 'area-coordinates-list';
+
+  points.forEach((point, index) => {
+    const item = document.createElement('li');
+    item.textContent = `P${index + 1}: ${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`;
+    list.appendChild(item);
+  });
+
+  areaCoordinatesContainer.appendChild(list);
 }
 
 function showBoundingBoxStatus(bbox, prefix = 'Área seleccionada') {
@@ -241,20 +272,13 @@ exportButton.addEventListener('click', () => {
 
 if (drawAreaButton) {
   drawAreaButton.addEventListener('click', () => {
-    selectionEnabled = true;
-    drawStart = null;
-    isDrawing = false;
-    if (areaMapContainer) {
-      areaMapContainer.classList.add('drawing');
-    }
-    setAreaStatus('Haz clic y arrastra sobre el mapa para delimitar el área.');
+    startAreaSelection();
   });
 }
 
 if (resetAreaButton) {
   resetAreaButton.addEventListener('click', () => {
     clearAreaSelection();
-    setAreaStatus('Área reiniciada. Pulsa "Dibujar área" para seleccionar nuevamente.');
   });
 }
 
@@ -266,21 +290,23 @@ if (searchAreaButton) {
 
 function clearAreaSelection() {
   areaBounds = null;
-  drawStart = null;
-  isDrawing = false;
+  polygonVertices = [];
   selectionEnabled = false;
-  if (mapInstance && drawnArea) {
-    mapInstance.removeLayer(drawnArea);
-    drawnArea = null;
+  if (mapInstance) {
+    mapInstance.doubleClickZoom.enable();
   }
+  removeAreaLayers();
   if (areaMapContainer) {
     areaMapContainer.classList.remove('drawing');
   }
+  setAreaStatus('Área reiniciada. Pulsa "Dibujar área" para seleccionar nuevamente.');
+  renderAreaCoordinates([]);
 }
 
 function initAreaMap() {
   if (!window.L || !areaMapContainer) {
     setAreaStatus('El mapa no pudo cargarse.');
+    renderAreaCoordinates([]);
     return;
   }
 
@@ -293,61 +319,155 @@ function initAreaMap() {
     attribution: 'Datos geográficos © OpenStreetMap contributors'
   }).addTo(mapInstance);
 
-  const finishDrawing = (event) => {
-    if (!isDrawing || !drawnArea || !event?.latlng) {
-      return;
-    }
-    isDrawing = false;
-    selectionEnabled = false;
-    mapInstance.dragging.enable();
-    if (areaMapContainer) {
-      areaMapContainer.classList.remove('drawing');
-    }
-
-    areaBounds = L.latLngBounds(drawStart, event.latlng);
-    drawnArea.setBounds(areaBounds);
-    showBoundingBoxStatus(
-      convertBoundsToBoundingBox(areaBounds),
-      'Área preparada (coordenadas)'
-    );
-  };
-
-  mapInstance.on('mousedown', (event) => {
-    if (!selectionEnabled) return;
-
-    drawStart = event.latlng;
-    isDrawing = true;
-    areaBounds = null;
-
-    if (drawnArea) {
-      mapInstance.removeLayer(drawnArea);
-    }
-    drawnArea = L.rectangle([drawStart, drawStart], {
-      color: '#f59e0b',
-      weight: 2,
-      fillColor: '#f59e0b',
-      fillOpacity: 0.15
-    }).addTo(mapInstance);
-
-    mapInstance.dragging.disable();
-  });
-
+  mapInstance.on('click', handleMapClick);
   mapInstance.on('mousemove', (event) => {
-    if (!isDrawing || !drawStart || !drawnArea) return;
-
-    const bounds = L.latLngBounds(drawStart, event.latlng);
-    drawnArea.setBounds(bounds);
+    if (!selectionEnabled || !polygonVertices.length) return;
+    updatePreviewPath(event.latlng);
   });
 
-  mapInstance.on('mouseup', finishDrawing);
-  mapInstance.on('mouseout', finishDrawing);
+  setAreaStatus('Pulsa "Dibujar área" y ve marcando los vértices sobre el mapa.');
+  renderAreaCoordinates([]);
+}
 
-  setAreaStatus('Pulsa "Dibujar área" y arrastra en el mapa para delimitar la búsqueda.');
+function startAreaSelection() {
+  if (!mapInstance) return;
+
+  selectionEnabled = true;
+  areaBounds = null;
+  polygonVertices = [];
+  removeAreaLayers();
+  mapInstance.doubleClickZoom.disable();
+
+  if (areaMapContainer) {
+    areaMapContainer.classList.add('drawing');
+  }
+
+  setAreaStatus('Haz clic en el mapa para añadir vértices. Cierra el polígono pulsando sobre el primer punto.');
+  renderAreaCoordinates([]);
+}
+
+function removeAreaLayers() {
+  if (mapInstance && drawnArea) {
+    mapInstance.removeLayer(drawnArea);
+    drawnArea = null;
+  }
+
+  if (mapInstance && previewPath) {
+    mapInstance.removeLayer(previewPath);
+    previewPath = null;
+  }
+
+  if (mapInstance && vertexMarkers.length) {
+    vertexMarkers.forEach((marker) => mapInstance.removeLayer(marker));
+    vertexMarkers = [];
+  }
+}
+
+function handleMapClick(event) {
+  if (!selectionEnabled || !event?.latlng) return;
+
+  if (isClosingClick(event.latlng)) {
+    finalizePolygon();
+    return;
+  }
+
+  addPolygonVertex(event.latlng);
+}
+
+function isClosingClick(latlng) {
+  if (!mapInstance || polygonVertices.length < 3) return false;
+
+  const firstPoint = mapInstance.latLngToLayerPoint(polygonVertices[0]);
+  const newPoint = mapInstance.latLngToLayerPoint(latlng);
+  return firstPoint.distanceTo(newPoint) < 12;
+}
+
+function addPolygonVertex(latlng) {
+  polygonVertices.push(latlng);
+
+  const marker = L.circleMarker(latlng, {
+    radius: 5,
+    color: '#f59e0b',
+    weight: 2,
+    fillColor: '#f59e0b',
+    fillOpacity: 0.8
+  }).addTo(mapInstance);
+  vertexMarkers.push(marker);
+
+  updatePreviewPath();
+  renderAreaCoordinates(polygonVertices);
+
+  const readyToClose = polygonVertices.length >= 3;
+  setAreaStatus(
+    readyToClose
+      ? 'Haz clic sobre el primer punto para cerrar el polígono.'
+      : 'Añade al menos 3 vértices para poder cerrar el área.'
+  );
+}
+
+function updatePreviewPath(hoverLatLng) {
+  if (!mapInstance) return;
+
+  if (previewPath) {
+    mapInstance.removeLayer(previewPath);
+    previewPath = null;
+  }
+
+  const points = [...polygonVertices];
+  if (hoverLatLng) {
+    points.push(hoverLatLng);
+  }
+
+  if (points.length < 2) return;
+
+  previewPath = L.polyline(points, {
+    color: '#f59e0b',
+    weight: 2,
+    dashArray: '6 4'
+  }).addTo(mapInstance);
+}
+
+function finalizePolygon() {
+  if (!mapInstance) return;
+
+  if (polygonVertices.length < 3) {
+    setAreaStatus('Necesitas al menos 3 vértices para cerrar el área.', true);
+    return;
+  }
+
+  selectionEnabled = false;
+  mapInstance.doubleClickZoom.enable();
+
+  if (previewPath) {
+    mapInstance.removeLayer(previewPath);
+    previewPath = null;
+  }
+
+  if (drawnArea) {
+    mapInstance.removeLayer(drawnArea);
+  }
+
+  drawnArea = L.polygon(polygonVertices, {
+    color: '#f59e0b',
+    weight: 2,
+    fillColor: '#f59e0b',
+    fillOpacity: 0.15
+  }).addTo(mapInstance);
+
+  areaBounds = drawnArea.getBounds();
+  mapInstance.fitBounds(areaBounds, { padding: [20, 20] });
+
+  showBoundingBoxStatus(convertBoundsToBoundingBox(areaBounds), 'Área preparada (polígono)');
+  setAreaStatus('Área cerrada. Pulsa "Buscar en área" para obtener puntos.');
+  if (areaMapContainer) {
+    areaMapContainer.classList.remove('drawing');
+  }
+  renderAreaCoordinates(polygonVertices);
 }
 
 async function performAreaSearch() {
   if (!areaBounds) {
-    setAreaStatus('Dibuja un rectángulo en el mapa antes de buscar.', true);
+    setAreaStatus('Dibuja y cierra un polígono en el mapa antes de buscar.', true);
     setStatus('Selecciona un área para buscar puntos.', true);
     return;
   }

@@ -105,6 +105,36 @@ h1 {
   color: var(--muted);
 }
 
+.area-coordinates {
+  background: #0b1221;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.area-coordinates h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.area-coordinates-list {
+  list-style: decimal inside;
+  margin: 0;
+  padding-left: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.area-coordinates-list li {
+  color: var(--text);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
 .area-panel {
   display: flex;
   flex-direction: column;

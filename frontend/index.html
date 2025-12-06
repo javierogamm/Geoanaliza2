@@ -48,7 +48,7 @@
         <div class="area-header">
           <div>
             <h2>Buscar por área en mapa</h2>
-            <p class="meta">Dibuja un rectángulo en el mapa y busca puntos dentro de la zona.</p>
+            <p class="meta">Dibuja un polígono en el mapa haciendo clic en cada vértice y ciérralo sobre el primer punto.</p>
           </div>
           <div class="area-actions">
             <button id="draw-area-btn" type="button" class="btn-secondary">Dibujar área</button>
@@ -58,6 +58,7 @@
         </div>
         <div id="area-map" class="area-map" aria-label="Mapa para seleccionar área"></div>
         <p id="area-status" class="meta area-status"></p>
+        <div id="area-coordinates" class="area-coordinates"></div>
       </section>
 
       <section class="panel results">
