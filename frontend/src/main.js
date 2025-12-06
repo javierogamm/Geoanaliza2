@@ -39,6 +39,16 @@ let isDrawing = false;
 let selectionEnabled = false;
 let areaBounds = null;
 
+const formatBoundingBoxLabel = (bbox) =>
+  `S:${bbox.south.toFixed(5)} W:${bbox.west.toFixed(5)} N:${bbox.north.toFixed(5)} E:${bbox.east.toFixed(5)}`;
+
+const convertBoundsToBoundingBox = (bounds) => ({
+  south: bounds.getSouth(),
+  west: bounds.getWest(),
+  north: bounds.getNorth(),
+  east: bounds.getEast()
+});
+
 const parseLimit = (value) => {
   const parsed = parseInt(value, 10);
   if (Number.isNaN(parsed) || parsed <= 0) return 20;
@@ -72,10 +82,10 @@ function setAreaStatus(message, isError = false) {
   areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
 }
 
-function setAreaStatus(message, isError = false) {
-  if (!areaStatus) return;
-  areaStatus.textContent = message;
-  areaStatus.style.color = isError ? '#f87171' : 'var(--muted)';
+function showBoundingBoxStatus(bbox, prefix = 'Área seleccionada') {
+  if (!bbox) return;
+  const message = `${prefix}: ${formatBoundingBoxLabel(bbox)}`;
+  setAreaStatus(message);
 }
 
 // Función para generar puntos desde expedientes importados
@@ -167,10 +177,6 @@ initTranspose(getCurrentPoints, getCustomColumnsDataMap);
 initCreateExpedients();
 
 if (areaMapContainer) {
-  prepareAreaMap();
-}
-
-if (areaMapContainer) {
   initAreaMap();
 }
 
@@ -214,7 +220,8 @@ async function performSearch() {
       city: data.city,
       neighbourhood: data.neighbourhood,
       totalAvailable: data.totalAvailable,
-      returned: data.returned
+      returned: data.returned,
+      boundingBox: data.boundingBox
     });
     renderPoints(data.points);
     plotPointsOnMap(data.points);
@@ -299,7 +306,10 @@ function initAreaMap() {
 
     areaBounds = L.latLngBounds(drawStart, event.latlng);
     drawnArea.setBounds(areaBounds);
-    setAreaStatus('Área preparada. Pulsa "Buscar en área" para obtener puntos.');
+    showBoundingBoxStatus(
+      convertBoundsToBoundingBox(areaBounds),
+      'Área preparada (coordenadas)'
+    );
   };
 
   mapInstance.on('mousedown', (event) => {
@@ -361,11 +371,16 @@ async function performAreaSearch() {
       neighbourhood: data.neighbourhood,
       totalAvailable: data.totalAvailable,
       returned: data.returned,
-      areaLabel: data.areaLabel || 'Área seleccionada'
+      areaLabel: data.areaLabel || 'Área seleccionada',
+      boundingBox: data.boundingBox
     });
     renderPoints(data.points);
     setStatus('');
-    setAreaStatus('Resultados cargados. Puedes volver a dibujar para refinar.');
+    if (data.boundingBox) {
+      showBoundingBoxStatus(data.boundingBox, 'Resultados cargados en el área');
+    } else {
+      setAreaStatus('Resultados cargados. Puedes volver a dibujar para refinar.');
+    }
   } catch (error) {
     setStatus(error.message || 'No se pudo obtener puntos', true);
     setAreaStatus('No se pudo obtener puntos para el área seleccionada.', true);

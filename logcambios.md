@@ -41,3 +41,11 @@
 - Se añaden trazas detalladas en la función serverless y en las capas de routing y servicios (Nominatim y Overpass) para
   registrar pasos, tiempos y parámetros de cada petición, facilitando la detección de dónde falla la obtención de puntos
   en Vercel.
+
+## Versión 1.2.7 - 2025-12-06
+- Permite consultar puntos solo dibujando un área en el mapa, sin exigir el parámetro de municipio, resolviendo la ciudad
+  automáticamente a partir del bounding box cuando es posible.
+- Devuelve y muestra las coordenadas (sur, oeste, norte, este) del rectángulo dibujado para mayor trazabilidad de la
+  búsqueda sobre el mapa.
+- Mantiene la compatibilidad del despliegue en Vercel utilizando el mismo endpoint `/api/points` que reutiliza la
+  aplicación del backend.

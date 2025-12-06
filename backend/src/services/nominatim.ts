@@ -57,6 +57,54 @@ const extractCityFromAddress = (
   );
 };
 
+export const resolveCityFromBoundingBox = async (
+  bbox: BoundingBox
+): Promise<string | null> => {
+  const centerLat = (bbox.north + bbox.south) / 2;
+  const centerLon = (bbox.east + bbox.west) / 2;
+
+  const url = new URL(NOMINATIM_REVERSE_URL);
+  url.searchParams.set('format', 'jsonv2');
+  url.searchParams.set('lat', centerLat.toString());
+  url.searchParams.set('lon', centerLon.toString());
+  url.searchParams.set('zoom', '12');
+  url.searchParams.set('addressdetails', '1');
+
+  const startedAt = Date.now();
+  console.info('[nominatim] Resolving city from bbox', {
+    bbox,
+    centerLat,
+    centerLon,
+    url: url.toString()
+  });
+
+  const response = await scheduleNominatim(() => fetch(url.toString(), withUserAgent()));
+  console.info('[nominatim] Reverse response received', {
+    status: response.status,
+    statusText: response.statusText,
+    durationMs: Date.now() - startedAt
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(
+      `Nominatim reverse respondió ${response.status} ${response.statusText}${
+        detail ? `: ${detail}` : ''
+      }`
+    );
+  }
+
+  const payload = (await response.json()) as Partial<NominatimResult>;
+  const cityName = payload.address ? extractCityFromAddress(payload.address) : null;
+
+  console.info('[nominatim] Reverse parsed', {
+    resolvedCity: cityName,
+    address: payload.address
+  });
+
+  return cityName;
+};
+
 export const fetchCityBoundingBox = async (city: string): Promise<CityLocation> => {
   const url = new URL(NOMINATIM_SEARCH_URL);
   url.searchParams.set('format', 'jsonv2');
