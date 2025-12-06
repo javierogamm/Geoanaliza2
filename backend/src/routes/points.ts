@@ -14,7 +14,7 @@ const parseLimit = (rawLimit: unknown): number => {
   if (Number.isNaN(value) || value <= 0) {
     return 20;
   }
-  return Math.min(value, 100);
+  return Math.min(value, 1000);
 };
 
 const isValidLatitude = (value: number): boolean => value >= -90 && value <= 90;

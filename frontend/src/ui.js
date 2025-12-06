@@ -12,9 +12,10 @@ let currentPoints = [];
 // Guardamos los datos generados para las columnas personalizadas
 let customColumnsData = new Map(); // Map<pointId, Map<columnId, value>>
 
-export function setStatus(message, isError = false) {
+export function setStatus(message, isError = false, { loading = false } = {}) {
   statusMessage.textContent = message;
   statusMessage.style.color = isError ? '#f87171' : '';
+  statusMessage.classList.toggle('status--loading', Boolean(loading));
 }
 
 export function renderMeta({

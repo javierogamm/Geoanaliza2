@@ -57,3 +57,11 @@
   la trazabilidad de la búsqueda.
 - Se mantienen intactas las configuraciones de despliegue en Vercel para asegurar que el nuevo flujo no afecte al
   funcionamiento actual en producción.
+
+## Versión 1.4.0 - 2025-12-08
+- Permite solicitar hasta 1000 puntos consolidando los resultados en lotes de 100, mostrando el progreso en la interfaz y
+  evitando bloqueos al dividir las llamadas a la API.
+- Mantiene la tabla y los metadatos actualizados a medida que llegan los lotes y desduplica los puntos por identificador
+  para conservar un recuento coherente.
+- Amplía el límite del endpoint `/api/points` para acompañar el nuevo flujo y preserva la configuración de despliegue en
+  Vercel sin cambios adicionales.

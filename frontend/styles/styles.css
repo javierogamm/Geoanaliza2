@@ -216,6 +216,19 @@ input:focus {
   margin: 12px 0 0;
   color: var(--muted);
   min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status.status--loading::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #f59e0b;
+  animation: spin 0.9s linear infinite;
 }
 
 .results {
@@ -273,6 +286,15 @@ input:focus {
 
 .results-table tbody tr:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 640px) {
