@@ -65,3 +65,7 @@
   para conservar un recuento coherente.
 - Amplía el límite del endpoint `/api/points` para acompañar el nuevo flujo y preserva la configuración de despliegue en
   Vercel sin cambios adicionales.
+
+## Versión 1.4.1 - 2025-12-08
+- Permite seleccionar siempre las columnas base (dirección, latitud y longitud) al transponer, incluso cuando aún no se han
+  configurado los tesauros de columnas base.

@@ -22,6 +22,12 @@ let currentPoints = null;
 let currentCustomColumnsData = null;
 let selectedFields = null;
 
+const defaultBaseColumnsConfig = {
+  street: { name: 'Dirección', reference: 'direccion' },
+  lat: { name: 'Latitud', reference: 'latitud' },
+  lng: { name: 'Longitud', reference: 'longitud' }
+};
+
 export function initTranspose(getCurrentPoints, getCustomColumnsData) {
   // Mostrar/ocultar botón según haya expedientes
   transposeBtn.addEventListener('click', () => {
@@ -76,28 +82,26 @@ function showFieldSelectionModal() {
   customFieldsCheckboxes.innerHTML = '';
 
   // Añadir checkboxes para columnas base
-  const baseConfig = getBaseColumnsConfig();
-  if (baseConfig) {
-    ['street', 'lat', 'lng'].forEach((field) => {
-      const checkboxItem = document.createElement('div');
-      checkboxItem.className = 'checkbox-item';
+  const baseConfig = getEffectiveBaseConfig();
+  ['street', 'lat', 'lng'].forEach((field) => {
+    const checkboxItem = document.createElement('div');
+    checkboxItem.className = 'checkbox-item';
 
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = `field-base-${field}`;
-      checkbox.value = field;
-      checkbox.name = 'base-field';
-      checkbox.checked = true; // Por defecto activado
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `field-base-${field}`;
+    checkbox.value = field;
+    checkbox.name = 'base-field';
+    checkbox.checked = true; // Por defecto activado
 
-      const label = document.createElement('label');
-      label.htmlFor = `field-base-${field}`;
-      label.textContent = baseConfig[field].name;
+    const label = document.createElement('label');
+    label.htmlFor = `field-base-${field}`;
+    label.textContent = baseConfig[field].name;
 
-      checkboxItem.appendChild(checkbox);
-      checkboxItem.appendChild(label);
-      baseFieldsCheckboxes.appendChild(checkboxItem);
-    });
-  }
+    checkboxItem.appendChild(checkbox);
+    checkboxItem.appendChild(label);
+    baseFieldsCheckboxes.appendChild(checkboxItem);
+  });
 
   // Añadir checkboxes para columnas personalizadas
   const customColumns = getCustomColumns();
@@ -127,6 +131,11 @@ function showFieldSelectionModal() {
 
 function closeSelectFieldsModal() {
   selectFieldsModal.classList.remove('active');
+}
+
+function getEffectiveBaseConfig() {
+  const baseConfig = getBaseColumnsConfig();
+  return baseConfig ?? defaultBaseColumnsConfig;
 }
 
 function handleFieldSelection() {
@@ -170,7 +179,7 @@ function transposeAndShow() {
 }
 
 function generateTransposedData(points, customColumnsData, expedientes, selectedFields) {
-  const baseConfig = getBaseColumnsConfig();
+  const baseConfig = getEffectiveBaseConfig();
   const customColumns = getCustomColumns();
   const expedientesValues = expedientes?.values || [];
 
@@ -190,7 +199,7 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
 
   points.forEach((point, index) => {
     const expedienteValue = expedientesValues[index] ?? point.expedienteValue ?? '';
-    const hasBaseFields = selectedFields.baseFields.length > 0 && baseConfig;
+    const hasBaseFields = selectedFields.baseFields.length > 0;
     const hasCustomFields = selectedFields.customFields.length > 0;
 
     if (!hasBaseFields && !hasCustomFields) return;
