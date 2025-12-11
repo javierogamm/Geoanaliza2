@@ -68,4 +68,8 @@
 
 ## Versión 1.4.1 - 2025-12-08
 - Permite seleccionar siempre las columnas base (dirección, latitud y longitud) al transponer, incluso cuando aún no se han
-  configurado los tesauros de columnas base.
+ configurado los tesauros de columnas base.
+
+## Versión 1.4.2 - 2025-12-09
+- Al transponer ahora se pueden personalizar los nombres de las columnas Dirección, Latitud y Longitud antes de exportar, y esos
+  nombres se respetan en el CSV/Excel generado.

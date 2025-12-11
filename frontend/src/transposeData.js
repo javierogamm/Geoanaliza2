@@ -15,6 +15,11 @@ const closeSelectFieldsBtn = document.getElementById('close-select-fields-modal'
 const cancelSelectFieldsBtn = document.getElementById('cancel-select-fields');
 const baseFieldsCheckboxes = document.getElementById('base-fields-checkboxes');
 const customFieldsCheckboxes = document.getElementById('custom-fields-checkboxes');
+const baseFieldNameInputs = {
+  street: document.getElementById('base-field-name-street'),
+  lat: document.getElementById('base-field-name-lat'),
+  lng: document.getElementById('base-field-name-lng')
+};
 
 // Datos transpuestos
 let transposedData = null;
@@ -83,6 +88,7 @@ function showFieldSelectionModal() {
 
   // Añadir checkboxes para columnas base
   const baseConfig = getEffectiveBaseConfig();
+  setBaseFieldNameInputs(baseConfig);
   ['street', 'lat', 'lng'].forEach((field) => {
     const checkboxItem = document.createElement('div');
     checkboxItem.className = 'checkbox-item';
@@ -142,6 +148,7 @@ function handleFieldSelection() {
   // Recoger campos seleccionados
   const baseFields = [];
   const customFields = [];
+  const baseConfig = getEffectiveBaseConfig();
 
   baseFieldsCheckboxes.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
     baseFields.push(checkbox.value);
@@ -156,7 +163,11 @@ function handleFieldSelection() {
     return;
   }
 
-  selectedFields = { baseFields, customFields };
+  selectedFields = {
+    baseFields,
+    customFields,
+    baseFieldNames: getBaseFieldNames(baseConfig)
+  };
 
   // Cerrar modal de selección
   closeSelectFieldsModal();
@@ -182,6 +193,11 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
   const baseConfig = getEffectiveBaseConfig();
   const customColumns = getCustomColumns();
   const expedientesValues = expedientes?.values || [];
+  const baseFieldNames = selectedFields?.baseFieldNames ?? {
+    street: baseConfig.street.name,
+    lat: baseConfig.lat.name,
+    lng: baseConfig.lng.name
+  };
 
   // Headers para la vista previa: Código expedi | Nombre tarea | Crear tarea | Nombre campo | Tipo campo te | Valor campo | Valor campo a
   // (Nombre entid se añadirá al exportar)
@@ -211,7 +227,7 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
           expedienteValue,
           '', // Nombre tarea (se rellenará al exportar)
           'Sí', // Crear tarea
-          baseConfig.street.name,
+          baseFieldNames.street,
           'Texto',
           point.street || '',
           '' // Valor campo adicional
@@ -223,7 +239,7 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
           expedienteValue,
           '', // Nombre tarea
           'Sí',
-          baseConfig.lat.name,
+          baseFieldNames.lat,
           'Texto',
           typeof point.lat === 'number' ? point.lat.toFixed(5) : '',
           ''
@@ -235,7 +251,7 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
           expedienteValue,
           '', // Nombre tarea
           'Sí',
-          baseConfig.lng.name,
+          baseFieldNames.lng,
           'Texto',
           typeof point.lng === 'number' ? point.lng.toFixed(5) : '',
           ''
@@ -397,4 +413,30 @@ function exportToExcel() {
 
   // Generar archivo Excel con codificación UTF-8
   XLSX.writeFile(wb, 'datos_transpuestos.xlsx', { bookType: 'xlsx', type: 'array', compression: true });
+}
+
+function setBaseFieldNameInputs(baseConfig) {
+  const baseFieldNames = selectedFields?.baseFieldNames ?? {
+    street: baseConfig.street.name,
+    lat: baseConfig.lat.name,
+    lng: baseConfig.lng.name
+  };
+
+  baseFieldNameInputs.street.value = baseFieldNames.street;
+  baseFieldNameInputs.lat.value = baseFieldNames.lat;
+  baseFieldNameInputs.lng.value = baseFieldNames.lng;
+}
+
+function getBaseFieldNames(baseConfig) {
+  return {
+    street: getBaseFieldNameValue(baseFieldNameInputs.street, baseConfig.street.name),
+    lat: getBaseFieldNameValue(baseFieldNameInputs.lat, baseConfig.lat.name),
+    lng: getBaseFieldNameValue(baseFieldNameInputs.lng, baseConfig.lng.name)
+  };
+}
+
+function getBaseFieldNameValue(input, fallback) {
+  if (!input) return fallback;
+  const value = input.value?.trim();
+  return value || fallback;
 }
