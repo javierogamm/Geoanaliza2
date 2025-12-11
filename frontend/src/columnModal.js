@@ -8,6 +8,10 @@ const form = document.getElementById('column-form');
 const typeSelect = document.getElementById('column-type');
 const rowsField = document.getElementById('rows-field');
 const numRowsInput = document.getElementById('num-rows');
+const numberRangesContainer = document.getElementById('number-ranges');
+const currencyRangesContainer = document.getElementById('currency-ranges');
+const addNumberRangeBtn = document.getElementById('add-number-range');
+const addCurrencyRangeBtn = document.getElementById('add-currency-range');
 
 // Secciones de configuración
 const configSections = {
@@ -42,6 +46,10 @@ export function initColumnModal(onColumnAdded, hasData) {
   // Añadir opción al selector
   document.getElementById('add-option-btn').addEventListener('click', addSelectorOption);
 
+  // Añadir tramos porcentuales
+  addNumberRangeBtn.addEventListener('click', () => addRangeRow(numberRangesContainer));
+  addCurrencyRangeBtn.addEventListener('click', () => addRangeRow(currencyRangesContainer));
+
   // Submit del formulario
   form.addEventListener('submit', handleFormSubmit);
 
@@ -75,6 +83,10 @@ function resetForm() {
   form.reset();
   hideAllConfigSections();
   document.getElementById('selector-options').innerHTML = '';
+  numberRangesContainer.innerHTML = '';
+  currencyRangesContainer.innerHTML = '';
+  document.getElementById('number-decimals').value = '2';
+  document.getElementById('currency-decimals').value = '2';
 }
 
 function hideAllConfigSections() {
@@ -225,6 +237,11 @@ function extractSelectorConfig() {
 function extractNumberConfig() {
   const min = document.getElementById('number-min').value;
   const max = document.getElementById('number-max').value;
+  const decimals = parseDecimals('number-decimals', 2);
+
+  if (decimals === null) {
+    return null;
+  }
 
   if (min === '' || max === '') {
     alert('Debes especificar un valor mínimo y máximo');
@@ -239,12 +256,22 @@ function extractNumberConfig() {
     return null;
   }
 
-  return { min: minValue, max: maxValue };
+  const ranges = extractRanges(numberRangesContainer, 'numéricos');
+  if (ranges === null) {
+    return null;
+  }
+
+  return { min: minValue, max: maxValue, decimals, ranges };
 }
 
 function extractCurrencyConfig() {
   const min = document.getElementById('currency-min').value;
   const max = document.getElementById('currency-max').value;
+  const decimals = parseDecimals('currency-decimals', 2);
+
+  if (decimals === null) {
+    return null;
+  }
 
   if (min === '' || max === '') {
     alert('Debes especificar un valor mínimo y máximo');
@@ -259,7 +286,83 @@ function extractCurrencyConfig() {
     return null;
   }
 
-  return { min: minValue, max: maxValue };
+  const ranges = extractRanges(currencyRangesContainer, 'de moneda');
+  if (ranges === null) {
+    return null;
+  }
+
+  return { min: minValue, max: maxValue, decimals, ranges };
+}
+
+function parseDecimals(inputId, fallback) {
+  const value = document.getElementById(inputId).value;
+  if (value === '') return fallback;
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed) || parsed < 0) {
+    alert('El número de decimales debe ser un entero mayor o igual que 0');
+    return null;
+  }
+  return Math.min(parsed, 10);
+}
+
+function addRangeRow(container) {
+  const row = document.createElement('div');
+  row.className = 'range-row field-group';
+  row.innerHTML = `
+    <div class="field">
+      <label>Tramo mínimo</label>
+      <input type="number" step="any" class="range-min" placeholder="0" />
+    </div>
+    <div class="field">
+      <label>Tramo máximo</label>
+      <input type="number" step="any" class="range-max" placeholder="10" />
+    </div>
+    <div class="field">
+      <label>% del total</label>
+      <input type="number" min="0" max="100" step="1" class="range-percentage" placeholder="50" />
+    </div>
+    <button type="button" class="btn-remove" aria-label="Eliminar tramo">✕</button>
+  `;
+
+  row.querySelector('.btn-remove').addEventListener('click', () => row.remove());
+  container.appendChild(row);
+}
+
+function extractRanges(container, label) {
+  const rows = container.querySelectorAll('.range-row');
+  if (rows.length === 0) return [];
+
+  const ranges = [];
+  let totalPercentage = 0;
+
+  rows.forEach((row) => {
+    const minValue = parseFloat(row.querySelector('.range-min').value);
+    const maxValue = parseFloat(row.querySelector('.range-max').value);
+    const percentage = parseFloat(row.querySelector('.range-percentage').value);
+
+    if ([minValue, maxValue, percentage].some((v) => Number.isNaN(v))) {
+      return;
+    }
+
+    if (minValue >= maxValue) {
+      return;
+    }
+
+    ranges.push({ min: minValue, max: maxValue, percentage });
+    totalPercentage += percentage;
+  });
+
+  if (ranges.length === 0) {
+    alert(`Debes añadir tramos de ${label} válidos o eliminar los existentes para continuar.`);
+    return null;
+  }
+
+  if (Math.abs(totalPercentage - 100) > 0.01) {
+    alert(`La suma de porcentajes de los tramos ${label} debe ser 100% (actual: ${totalPercentage}%).`);
+    return null;
+  }
+
+  return ranges;
 }
 
 function extractDateConfig() {
