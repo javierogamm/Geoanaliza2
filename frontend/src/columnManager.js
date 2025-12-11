@@ -132,6 +132,8 @@ export function formatCellValue(column, value) {
   switch (column.type) {
     case 'csv':
     case 'selector':
+      return value === undefined || value === null ? '' : String(value);
+
     case 'number':
       return formatNumber(value, column.config);
 

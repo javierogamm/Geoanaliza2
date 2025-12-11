@@ -47,8 +47,12 @@ export function initColumnModal(onColumnAdded, hasData) {
   document.getElementById('add-option-btn').addEventListener('click', addSelectorOption);
 
   // Añadir tramos porcentuales
-  addNumberRangeBtn.addEventListener('click', () => addRangeRow(numberRangesContainer));
-  addCurrencyRangeBtn.addEventListener('click', () => addRangeRow(currencyRangesContainer));
+  addNumberRangeBtn.addEventListener('click', () =>
+    addRangeRow(numberRangesContainer, getDefaultRangeValues(numberRangesContainer, 'number-min', 'number-max'))
+  );
+  addCurrencyRangeBtn.addEventListener('click', () =>
+    addRangeRow(currencyRangesContainer, getDefaultRangeValues(currencyRangesContainer, 'currency-min', 'currency-max'))
+  );
 
   // Submit del formulario
   form.addEventListener('submit', handleFormSubmit);
@@ -305,7 +309,7 @@ function parseDecimals(inputId, fallback) {
   return Math.min(parsed, 10);
 }
 
-function addRangeRow(container) {
+function addRangeRow(container, defaults = {}) {
   const row = document.createElement('div');
   row.className = 'range-row field-group';
   row.innerHTML = `
@@ -325,7 +329,26 @@ function addRangeRow(container) {
   `;
 
   row.querySelector('.btn-remove').addEventListener('click', () => row.remove());
+  row.querySelector('.range-min').value = defaults.min ?? '';
+  row.querySelector('.range-max').value = defaults.max ?? '';
+  row.querySelector('.range-percentage').value = defaults.percentage ?? '';
   container.appendChild(row);
+}
+
+function getDefaultRangeValues(container, minFieldId, maxFieldId) {
+  const minField = document.getElementById(minFieldId);
+  const maxField = document.getElementById(maxFieldId);
+
+  const min = parseFloat(minField.value);
+  const max = parseFloat(maxField.value);
+  const hasValidLimits = Number.isFinite(min) && Number.isFinite(max) && min < max;
+  const isFirstRange = container.children.length === 0;
+
+  return {
+    min: hasValidLimits ? minField.value : '',
+    max: hasValidLimits ? maxField.value : '',
+    percentage: isFirstRange && hasValidLimits ? '100' : ''
+  };
 }
 
 function extractRanges(container, label) {

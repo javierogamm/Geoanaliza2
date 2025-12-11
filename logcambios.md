@@ -74,3 +74,7 @@
 - La exportación de datos transpuestos genera CSV en UTF-8 con BOM y escapado de campos, sustituyendo la salida Excel previa.
 - Las columnas numéricas permiten definir el número de decimales y distribuir valores mediante tramos porcentuales configurables.
 - Las columnas de moneda aceptan decimales personalizados y reparto por tramos con porcentajes que suman el 100%.
+
+## Versión 1.5.1 - 2025-12-10
+- Corrige la visualización de campos tipo selector y columnas importadas desde CSV, mostrando sus valores en pantalla.
+- Pre-rellena el primer tramo de columnas numéricas y de moneda con los valores mínimo y máximo definidos, facilitando asignar el porcentaje inicial.
