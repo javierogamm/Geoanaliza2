@@ -1,5 +1,5 @@
 import { getExpedientesData } from './importExcel.js';
-import { getCustomColumns } from './columnManager.js';
+import { formatCellValue, getCustomColumns } from './columnManager.js';
 import { getBaseColumnsConfig } from './baseColumnsModal.js';
 
 const modal = document.getElementById('transpose-modal');
@@ -54,7 +54,7 @@ export function initTranspose(getCurrentPoints, getCustomColumnsData) {
     handleFieldSelection();
   });
 
-  exportBtn.addEventListener('click', exportToExcel);
+  exportBtn.addEventListener('click', exportToCSV);
 }
 
 export function showTransposeButton() {
@@ -269,26 +269,8 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
 }
 
 function formatCellValueForTable(column, value) {
-  if (!value) return '';
-
-  switch (column.type) {
-    case 'currency':
-      return new Intl.NumberFormat('es-ES', {
-        style: 'currency',
-        currency: 'EUR'
-      }).format(value);
-
-    case 'date':
-      if (!(value instanceof Date)) return '';
-      return new Intl.DateTimeFormat('es-ES', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).format(value);
-
-    default:
-      return String(value);
-  }
+  const formatted = formatCellValue(column, value);
+  return formatted ?? '';
 }
 
 function renderTransposedTable(data) {
@@ -335,7 +317,7 @@ function closeModal() {
   modal.classList.remove('active');
 }
 
-function exportToExcel() {
+function exportToCSV() {
   if (!transposedData) {
     alert('No hay datos transpuestos para exportar');
     return;
@@ -383,18 +365,25 @@ function exportToExcel() {
     ];
   });
 
-  // Crear workbook
-  const wb = XLSX.utils.book_new();
+  const csvRows = [exportHeaders, ...exportRows];
+  const csvContent = csvRows.map((row) => row.map(escapeCsvValue).join(';')).join('\r\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
 
-  // Crear datos para la hoja
-  const wsData = [exportHeaders, ...exportRows];
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'datos_transpuestos.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
-  // Crear worksheet
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-  // Añadir worksheet al workbook
-  XLSX.utils.book_append_sheet(wb, ws, 'Datos Transpuestos');
-
-  // Generar archivo Excel con codificación UTF-8
-  XLSX.writeFile(wb, 'datos_transpuestos.xlsx', { bookType: 'xlsx', type: 'array', compression: true });
+function escapeCsvValue(value) {
+  const str = String(value ?? '');
+  if (str.includes('"') || str.includes(';') || str.includes(',') || str.includes('\n')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
 }

@@ -69,3 +69,8 @@
 ## Versión 1.4.1 - 2025-12-08
 - Permite seleccionar siempre las columnas base (dirección, latitud y longitud) al transponer, incluso cuando aún no se han
   configurado los tesauros de columnas base.
+
+## Versión 1.5.0 - 2025-12-09
+- La exportación de datos transpuestos genera CSV en UTF-8 con BOM y escapado de campos, sustituyendo la salida Excel previa.
+- Las columnas numéricas permiten definir el número de decimales y distribuir valores mediante tramos porcentuales configurables.
+- Las columnas de moneda aceptan decimales personalizados y reparto por tramos con porcentajes que suman el 100%.

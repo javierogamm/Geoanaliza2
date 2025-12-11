@@ -130,7 +130,7 @@
           <div class="transpose-content">
             <div class="transpose-actions">
               <button id="export-transposed-excel" type="button" class="btn">
-                📥 Exportar a Excel
+                📥 Exportar CSV UTF-8
               </button>
             </div>
             <div id="transposed-table-container" class="transposed-table-container">
@@ -327,6 +327,17 @@
                   <input id="number-max" type="number" step="any" placeholder="100" />
                 </div>
               </div>
+              <div class="field">
+                <label for="number-decimals">Nº de decimales</label>
+                <input id="number-decimals" type="number" min="0" max="10" step="1" value="2" />
+                <p class="help-text">Define los decimales al generar, mostrar y exportar los valores numéricos.</p>
+              </div>
+              <div class="field">
+                <label>Tramos porcentuales (opcional)</label>
+                <div id="number-ranges" class="range-list"></div>
+                <button type="button" id="add-number-range" class="btn-secondary">+ Añadir tramo</button>
+                <p class="help-text">Ejemplo: 80% entre 1 y 10, 20% entre 10 y 20. La suma debe ser 100%.</p>
+              </div>
             </div>
 
             <div id="config-currency" class="config-section" style="display: none;">
@@ -339,6 +350,17 @@
                   <label for="currency-max">Máximo (€) *</label>
                   <input id="currency-max" type="number" step="any" placeholder="10000" />
                 </div>
+              </div>
+              <div class="field">
+                <label for="currency-decimals">Nº de decimales</label>
+                <input id="currency-decimals" type="number" min="0" max="10" step="1" value="2" />
+                <p class="help-text">Se aplica a los valores de moneda generados y exportados.</p>
+              </div>
+              <div class="field">
+                <label>Tramos porcentuales (opcional)</label>
+                <div id="currency-ranges" class="range-list"></div>
+                <button type="button" id="add-currency-range" class="btn-secondary">+ Añadir tramo</button>
+                <p class="help-text">Reparte los valores por rangos, con porcentajes que sumen 100%.</p>
               </div>
             </div>
 

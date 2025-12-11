@@ -102,9 +102,9 @@ function generateSelectorValue(config, rowIndex, totalRows) {
 function generateNumberValue(config) {
   const min = parseFloat(config.min) || 0;
   const max = parseFloat(config.max) || 100;
-  const decimals = config.decimals !== undefined ? config.decimals : 2;
-
-  const value = min + Math.random() * (max - min);
+  const decimals = getDecimals(config, 2);
+  const range = pickRange(config, min, max);
+  const value = range.min + Math.random() * (range.max - range.min);
   return parseFloat(value.toFixed(decimals));
 }
 
@@ -112,9 +112,10 @@ function generateNumberValue(config) {
 function generateCurrencyValue(config) {
   const min = parseFloat(config.min) || 0;
   const max = parseFloat(config.max) || 10000;
-
-  const value = min + Math.random() * (max - min);
-  return parseFloat(value.toFixed(2));
+  const decimals = getDecimals(config, 2);
+  const range = pickRange(config, min, max);
+  const value = range.min + Math.random() * (range.max - range.min);
+  return parseFloat(value.toFixed(decimals));
 }
 
 // Genera fecha aleatoria entre min y max
@@ -132,24 +133,87 @@ export function formatCellValue(column, value) {
     case 'csv':
     case 'selector':
     case 'number':
-      return String(value);
+      return formatNumber(value, column.config);
 
     case 'currency':
-      return formatCurrency(value);
+      return formatCurrency(value, column.config);
 
     case 'date':
       return formatDate(value);
 
     default:
-      return String(value);
+      return value === undefined || value === null ? '' : String(value);
   }
 }
 
+function getDecimals(config, fallback) {
+  if (!config || config.decimals === undefined || config.decimals === null) {
+    return fallback;
+  }
+
+  const parsed = parseInt(config.decimals, 10);
+  if (Number.isNaN(parsed) || parsed < 0) {
+    return fallback;
+  }
+
+  return parsed;
+}
+
+function pickRange(config, defaultMin, defaultMax) {
+  const ranges = Array.isArray(config?.ranges)
+    ? config.ranges.filter((range) =>
+        Number.isFinite(range?.min) &&
+        Number.isFinite(range?.max) &&
+        range.min < range.max &&
+        Number.isFinite(range?.percentage) &&
+        range.percentage > 0
+      )
+    : [];
+
+  if (ranges.length === 0) {
+    return { min: defaultMin, max: defaultMax };
+  }
+
+  const totalPercentage = ranges.reduce((acc, range) => acc + range.percentage, 0);
+  if (totalPercentage <= 0) {
+    return { min: defaultMin, max: defaultMax };
+  }
+
+  const random = Math.random() * totalPercentage;
+  let accumulated = 0;
+
+  for (const range of ranges) {
+    accumulated += range.percentage;
+    if (random <= accumulated) {
+      return { min: range.min, max: range.max };
+    }
+  }
+
+  return { min: defaultMin, max: defaultMax };
+}
+
+function formatNumber(value, config) {
+  if (value === undefined || value === null || Number.isNaN(Number(value))) {
+    return '';
+  }
+
+  const decimals = getDecimals(config, 2);
+  return Number(value).toFixed(decimals);
+}
+
 // Formatea un valor como moneda (euros)
-function formatCurrency(value) {
+function formatCurrency(value, config) {
+  if (value === undefined || value === null || Number.isNaN(Number(value))) {
+    return '';
+  }
+
+  const decimals = getDecimals(config, 2);
+
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
-    currency: 'EUR'
+    currency: 'EUR',
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
   }).format(value);
 }
 
@@ -172,12 +236,10 @@ export function formatCellValueForCSV(column, value) {
       return String(value);
 
     case 'number':
-      // Formato español: coma decimal
-      return String(value).replace('.', ',');
+      return formatNumber(value, column.config).replace('.', ',');
 
     case 'currency':
-      // Formato español: coma decimal, sin símbolo
-      return String(value).replace('.', ',');
+      return formatNumber(value, column.config).replace('.', ',');
 
     case 'date':
       // Formato DD/MM/YYYY
