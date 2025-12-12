@@ -8,7 +8,7 @@ import {
   getCurrentPoints,
   getCustomColumnsDataMap
 } from './ui.js';
-import { initColumnModal } from './columnModal.js';
+import { initColumnModal, startDetectedThesaurusValidation } from './columnModal.js';
 import { initBaseColumnsModal, openBaseColumnsModal, hasBaseColumnsConfig } from './baseColumnsModal.js';
 import { initImportExcel, getExpedientesData, hasExpedientes } from './importExcel.js';
 import { initImportCsv } from './importCsv.js';
@@ -270,6 +270,28 @@ initColumnModal((numRows) => {
   }
 }, hasData);
 
+document.addEventListener('thesaurus-detection:validate', (event) => {
+  const detectedTesauros = event.detail?.detectedTesauros;
+
+  if (!Array.isArray(detectedTesauros) || detectedTesauros.length === 0) {
+    return;
+  }
+
+  startDetectedThesaurusValidation(detectedTesauros, () => {
+    if (lastPointsData?.points) {
+      renderPoints(lastPointsData.points);
+      return;
+    }
+
+    if (mockPoints.length > 0) {
+      renderPoints(mockPoints);
+      return;
+    }
+
+    renderPoints([]);
+  });
+});
+
 // Inicializar el modal de tesauros base
 initBaseColumnsModal((config) => {
   // Una vez configurado, proceder con la búsqueda
@@ -499,7 +521,7 @@ function initAreaMap() {
     attribution: 'Datos geográficos © OpenStreetMap contributors'
   }).addTo(mapInstance);
 
-  pointsLayerGroup = L.layerGroup().addTo(mapInstance);
+  pointsLayerGroup = L.featureGroup().addTo(mapInstance);
 
   mapInstance.on('click', handleMapClick);
   mapInstance.on('mousemove', (event) => {
