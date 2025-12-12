@@ -127,3 +127,7 @@
 ## Versión 1.8.2 - 2025-12-14
 - La exportación CSV de los datos transpuestos mantiene la latitud y la longitud exactamente como llegan las coordenadas, sin
   aplicar formatos locales ni separadores de miles que alteren los valores.
+
+## Versión 1.8.3 - 2025-12-14
+- La exportación CSV principal conserva las coordenadas tal como se generan (sin redondeos ni formatos locales), evitando que
+  se alteren por separadores de miles al abrir el archivo.
