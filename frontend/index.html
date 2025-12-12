@@ -25,7 +25,27 @@
         </div>
       </header>
 
-      <section class="panel">
+      <section class="panel mode-panel">
+        <h2>¿Cómo quieres pedir los puntos?</h2>
+        <div class="mode-options">
+          <label class="mode-option">
+            <input type="radio" name="search-mode" value="city" checked />
+            <span>
+              <strong>Indicar población</strong>
+              <small>Usa municipio y barrio para buscar</small>
+            </span>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="search-mode" value="map" />
+            <span>
+              <strong>Con mapa</strong>
+              <small>Dibuja un área y consulta los puntos</small>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel form-panel">
         <form id="search-form" class="form">
           <div class="field">
             <label for="city">Municipio *</label>
@@ -51,6 +71,10 @@
             <p class="meta">Dibuja un polígono en el mapa haciendo clic en cada vértice y ciérralo sobre el primer punto.</p>
           </div>
           <div class="area-actions">
+            <div class="field compact-field">
+              <label for="map-limit">Nº de puntos</label>
+              <input id="map-limit" name="map-limit" type="number" min="1" max="1000" value="20" />
+            </div>
             <button id="draw-area-btn" type="button" class="btn-secondary">Dibujar área</button>
             <button id="reset-area-btn" type="button" class="btn-secondary">Limpiar área</button>
             <button id="search-area-btn" type="button" class="btn">Buscar en área</button>
