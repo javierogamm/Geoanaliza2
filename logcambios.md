@@ -87,3 +87,6 @@
 ## Versión 1.6.1 - 2025-12-11
 - Muestra un primer tramo por defecto en columnas numéricas y de moneda, permitiendo asignar porcentajes y añadir nuevos tramos sin bloquear la creación cuando los rangos están vacíos.
 - Gestiona en secuencia la validación de tesauros detectados, abriendo el modal de columnas para cada elemento pendiente hasta completar la lista.
+
+## Versión 1.6.2 - 2025-12-12
+- Usa un `FeatureGroup` para los puntos del mapa, permitiendo calcular sus límites y ajustar la vista sin errores al cargar resultados desde el backend.
