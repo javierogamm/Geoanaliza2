@@ -90,10 +90,14 @@ function openModal() {
   }
 }
 
-function closeModal() {
+function closeModal({ reason = 'cancel' } = {}) {
   modal.classList.remove('active');
   resetForm();
-  document.dispatchEvent(new CustomEvent('column-modal-closed'));
+  document.dispatchEvent(
+    new CustomEvent('column-modal-closed', {
+      detail: { reason }
+    })
+  );
 }
 
 export function openColumnModalWithPrefill(prefill) {
@@ -169,6 +173,14 @@ function handleTypeChange(e) {
   if (type && configSections[type]) {
     configSections[type].style.display = 'block';
 
+    if (type === 'number') {
+      ensureInitialRangeRow(numberRangesContainer, 'number-min', 'number-max');
+    }
+
+    if (type === 'currency') {
+      ensureInitialRangeRow(currencyRangesContainer, 'currency-min', 'currency-max');
+    }
+
     // Si es selector, añadimos 2 opciones por defecto
     if (type === 'selector') {
       const container = document.getElementById('selector-options');
@@ -232,7 +244,7 @@ function handleFormSubmit(e) {
     config: config
   });
 
-  closeModal();
+  closeModal({ reason: 'submit' });
 
   // Ejecutar callback con el número de filas
   if (onColumnAddedCallback) {
@@ -459,6 +471,11 @@ function extractRanges(container, label) {
   }
 
   return ranges;
+}
+
+function ensureInitialRangeRow(container, minFieldId, maxFieldId) {
+  if (container.children.length > 0) return;
+  addRangeRow(container, getDefaultRangeValues(container, minFieldId, maxFieldId));
 }
 
 function extractDateConfig() {

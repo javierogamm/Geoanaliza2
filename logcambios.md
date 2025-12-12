@@ -100,3 +100,13 @@
 ## Versión 1.7.3 - 2025-12-12
 - Sustituye el `layerGroup` de marcadores por un `featureGroup` en el mapa para poder calcular los límites de los puntos sin
   errores al buscar por población y ajustar correctamente la vista a los resultados.
+
+## Versión 1.7.4 - 2025-12-12
+- Las columnas numéricas y de moneda muestran por defecto un primer tramo editable alineado con los límites definidos y
+  permiten seguir añadiendo nuevos tramos sin perder el inicial.
+- Al validar tesauros detectados se encadenan automáticamente las configuraciones de todas las columnas adicionales hasta
+  completar la lista sugerida.
+
+## Versión 1.7.5 - 2025-12-12
+- Se restaura la visibilidad del botón de transposición de datos en la interfaz principal para poder acceder a la función sin
+  pasos adicionales tras importar.
