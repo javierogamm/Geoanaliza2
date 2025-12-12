@@ -123,3 +123,7 @@
   y borrado individuales.
 - Se elimina el botón global de columnas base y se mejora la visibilidad de la configuración con estilos diferenciados.
 - La cola de tesauros detectados vuelve a procesarse secuencialmente para abrir todas las configuraciones pendientes.
+
+## Versión 1.8.2 - 2025-12-14
+- La exportación CSV de los datos transpuestos mantiene la latitud y la longitud exactamente como llegan las coordenadas, sin
+  aplicar formatos locales ni separadores de miles que alteren los valores.
