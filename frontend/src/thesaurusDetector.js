@@ -14,7 +14,8 @@ const selectAllExtras = document.getElementById('thesaurus-select-all');
 const feedback = document.getElementById('thesaurus-feedback');
 
 let refreshTableCallback = null;
-let queuedCustomColumns = [];
+let pendingThesaurusExtras = [];
+let isUsingDetectedPrefill = false;
 
 export function initThesaurusDetector({ refreshTable }) {
   refreshTableCallback = refreshTable;
@@ -40,6 +41,8 @@ export function initThesaurusDetector({ refreshTable }) {
   }
 
   document.addEventListener('column-added', handleColumnAddedFromQueue);
+  document.addEventListener('column-modal-closed', handleColumnModalClosed);
+  document.addEventListener('thesaurus-prefill-accepted', handleThesaurusPrefillAccepted);
 }
 
 function openModal() {
@@ -48,9 +51,12 @@ function openModal() {
   pasteInput?.focus();
 }
 
-function closeModal() {
+function closeModal({ preserveExtras = false } = {}) {
   modal.classList.remove('active');
-  queuedCustomColumns = [];
+  if (!preserveExtras) {
+    pendingThesaurusExtras = [];
+  }
+  isUsingDetectedPrefill = false;
 }
 
 function resetModal() {
@@ -105,8 +111,9 @@ function handleContinue() {
     refreshTableCallback();
   }
 
-  queuedCustomColumns = collectSelectedExtras();
-  closeModal();
+  pendingThesaurusExtras = collectSelectedExtras();
+  isUsingDetectedPrefill = false;
+  closeModal({ preserveExtras: true });
   openNextCustomColumn();
 }
 
@@ -163,6 +170,8 @@ function renderBaseCandidates(candidates) {
   const candidateKeys = Object.keys(labels);
   candidateKeys.forEach((key) => {
     const candidate = candidates[key];
+    const defaultName = labels[key];
+    const defaultReference = suggestReference(defaultName);
     const row = document.createElement('div');
     row.className = 'thesaurus-row';
 
@@ -178,11 +187,11 @@ function renderBaseCandidates(candidates) {
     } else {
       row.innerHTML = `
         <label class="thesaurus-check">
-          <input type="checkbox" class="thesaurus-base-check" data-field="${key}" />
-          <span>No se detectó ${labels[key]} en el pegado</span>
+          <input type="checkbox" class="thesaurus-base-check" data-field="${key}" checked />
+          <span>Asignar ${labels[key]} con el nombre por defecto</span>
         </label>
-        <input type="text" class="thesaurus-base-name" data-field="${key}" placeholder="Introduce el nombre del tesauro" />
-        <p class="help-text">Puedes escribirlo manualmente si quieres completarlo ahora.</p>
+        <input type="text" class="thesaurus-base-name" data-field="${key}" value="${defaultName}" />
+        <p class="help-text">Referencia sugerida: ${defaultReference}</p>
       `;
     }
 
@@ -205,7 +214,7 @@ function renderExtraCandidates(extras) {
       <input type="checkbox" class="thesaurus-extra-check" data-name="${extra.value}" checked />
       <div>
         <strong>${extra.value}</strong>
-        <p class="help-text">Referencia sugerida: ${suggestReference(extra.value)}</p>
+        <p class="help-text">Referencia sugerida: ${toCamelCase(extra.value)}</p>
       </div>
     `;
     extrasResults.appendChild(option);
@@ -236,20 +245,38 @@ function collectSelectedExtras() {
       const name = check.dataset.name;
       return {
         name,
-        reference: suggestReference(name)
+        reference: toCamelCase(name)
       };
     });
 }
 
 function openNextCustomColumn() {
-  if (queuedCustomColumns.length === 0) return;
-  const next = queuedCustomColumns.shift();
+  if (pendingThesaurusExtras.length === 0) return;
+  const next = pendingThesaurusExtras[0];
+  isUsingDetectedPrefill = true;
   openColumnModalWithPrefill(next);
 }
 
 function handleColumnAddedFromQueue() {
-  if (queuedCustomColumns.length === 0) return;
+  if (!isUsingDetectedPrefill || pendingThesaurusExtras.length === 0) return;
+  pendingThesaurusExtras.shift();
+  isUsingDetectedPrefill = false;
   setTimeout(openNextCustomColumn, 120);
+}
+
+function handleColumnModalClosed() {
+  isUsingDetectedPrefill = false;
+}
+
+function handleThesaurusPrefillAccepted(event) {
+  if (!pendingThesaurusExtras.length) return;
+  const pending = pendingThesaurusExtras[0];
+  const normalizedName = normalize(event.detail?.name || '');
+  const normalizedPending = normalize(pending.name);
+
+  if (normalizedName === normalizedPending) {
+    isUsingDetectedPrefill = true;
+  }
 }
 
 function normalize(text) {
@@ -268,4 +295,27 @@ function suggestReference(text) {
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '')
     .toLowerCase();
+}
+
+function toCamelCase(text) {
+  const cleaned = text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .trim();
+
+  if (!cleaned) return '';
+
+  const parts = cleaned.split(/\s+/);
+  return parts
+    .map((part, index) => {
+      const lower = part.toLowerCase();
+      if (index === 0) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join('');
+}
+
+export function getPendingThesaurusExtra() {
+  return pendingThesaurusExtras[0] || null;
 }

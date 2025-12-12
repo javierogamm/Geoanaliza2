@@ -26,13 +26,14 @@ let onColumnAddedCallback = null;
 // Función para verificar si hay datos cargados
 let hasDataCallback = null;
 let pendingPrefill = null;
+let detectedExtraProvider = null;
 
 export function initColumnModal(onColumnAdded, hasData) {
   onColumnAddedCallback = onColumnAdded;
   hasDataCallback = hasData;
 
   // Abrir modal
-  openBtn.addEventListener('click', openModal);
+  openBtn.addEventListener('click', handleOpenRequest);
 
   // Cerrar modal
   closeBtn.addEventListener('click', closeModal);
@@ -92,11 +93,57 @@ function openModal() {
 function closeModal() {
   modal.classList.remove('active');
   resetForm();
+  document.dispatchEvent(new CustomEvent('column-modal-closed'));
 }
 
 export function openColumnModalWithPrefill(prefill) {
   pendingPrefill = prefill;
   openModal();
+}
+
+function handleOpenRequest() {
+  pendingPrefill = null;
+
+  if (detectedExtraProvider) {
+    const candidate = detectedExtraProvider();
+    if (candidate) {
+      const shouldUse = confirm(`¿Quieres configurar la columna detectada "${candidate.name}"?`);
+      if (shouldUse) {
+        const reference = buildCamelCaseReference(candidate.name);
+        pendingPrefill = { name: candidate.name, reference };
+        document.dispatchEvent(
+          new CustomEvent('thesaurus-prefill-accepted', {
+            detail: { name: candidate.name }
+          })
+        );
+      }
+    }
+  }
+
+  openModal();
+}
+
+function buildCamelCaseReference(text) {
+  const cleaned = text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .trim();
+
+  if (!cleaned) return '';
+
+  const parts = cleaned.split(/\s+/);
+  return parts
+    .map((part, index) => {
+      const lower = part.toLowerCase();
+      if (index === 0) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join('');
+}
+
+export function registerDetectedExtraProvider(provider) {
+  detectedExtraProvider = provider;
 }
 
 function resetForm() {
