@@ -49,6 +49,7 @@ function openModal() {
   resetModal();
   modal.classList.add('active');
   pasteInput?.focus();
+  document.dispatchEvent(new CustomEvent('thesaurus-workflow-start'));
 }
 
 function closeModal({ preserveExtras = false } = {}) {
@@ -114,6 +115,11 @@ function handleContinue() {
   pendingThesaurusExtras = collectSelectedExtras();
   isUsingDetectedPrefill = false;
   closeModal({ preserveExtras: true });
+  document.dispatchEvent(
+    new CustomEvent('thesaurus-validated', {
+      detail: { pendingExtras: pendingThesaurusExtras.length }
+    })
+  );
   openNextCustomColumn();
 }
 

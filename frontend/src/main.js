@@ -105,6 +105,11 @@ const togglePanelsByMode = () => {
   }
 };
 
+const scrollToPanel = (panel) => {
+  if (!panel) return;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+};
+
 const markStepAsSkipped = (panel) => {
   if (!panel) return;
   panel.classList.remove('is-active', 'is-done');
@@ -119,6 +124,7 @@ const markStepAsSkipped = (panel) => {
 
 const markStepAsActive = (panel, message) => {
   if (!panel) return;
+  const wasActive = panel.classList.contains('is-active');
   panel.classList.remove('is-skipped', 'is-done');
   panel.classList.add('is-active');
   const feedback = panel.querySelector('.step-feedback');
@@ -127,16 +133,23 @@ const markStepAsActive = (panel, message) => {
     feedback.classList.remove('step-feedback--skipped');
     feedback.classList.add('step-feedback--active');
   }
+  if (!wasActive) {
+    scrollToPanel(panel);
+  }
 };
 
 const markStepAsDone = (panel, message) => {
   if (!panel) return;
+  const wasDone = panel.classList.contains('is-done');
   panel.classList.remove('is-skipped', 'is-active');
   panel.classList.add('is-done');
   const feedback = panel.querySelector('.step-feedback');
   if (feedback && message) {
     feedback.textContent = message;
     feedback.classList.remove('step-feedback--skipped', 'step-feedback--active');
+  }
+  if (!wasDone) {
+    scrollToPanel(panel);
   }
 };
 
@@ -488,6 +501,34 @@ initThesaurusDetector({ refreshTable: refreshTableWithCurrentData });
 registerDetectedExtraProvider(() => getPendingThesaurusExtra());
 renderThesaurusBoard();
 
+document.addEventListener('thesaurus-workflow-start', () => {
+  markStepAsActive(
+    orderedStepPanels[3],
+    'Revisa los tesauros pegados, valida referencias y confirma para aplicarlos.'
+  );
+});
+
+document.addEventListener('thesaurus-validated', () => {
+  markStepAsDone(
+    orderedStepPanels[3],
+    'Tesauros validados y aplicados. Puedes seguir con la transposición.'
+  );
+});
+
+document.addEventListener('transposition-started', () => {
+  markStepAsActive(
+    orderedStepPanels[4],
+    'Selecciona los campos a transponer y revisa la vista previa antes de exportar.'
+  );
+});
+
+document.addEventListener('transposition-exported', () => {
+  markStepAsDone(
+    orderedStepPanels[4],
+    'Transposición exportada correctamente. Los datos se han descargado en CSV.'
+  );
+});
+
 if (limitInput) {
   limitInput.addEventListener('input', (event) => syncLimitInputs(event.target.value));
 }
@@ -709,6 +750,11 @@ function plotPointsOnMap(points = []) {
     if (bounds?.isValid()) {
       mapInstance.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
     }
+  }
+
+  if (validPoints.length) {
+    markStepAsDone(orderedStepPanels[1], 'Puntos dibujados en el mapa.');
+    markStepAsDone(orderedStepPanels[2], 'Mapa actualizado con los puntos obtenidos.');
   }
 }
 
