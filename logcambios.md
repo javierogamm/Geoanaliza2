@@ -106,3 +106,7 @@
   permiten seguir añadiendo nuevos tramos sin perder el inicial.
 - Al validar tesauros detectados se encadenan automáticamente las configuraciones de todas las columnas adicionales hasta
   completar la lista sugerida.
+
+## Versión 1.7.5 - 2025-12-12
+- Se restaura la visibilidad del botón de transposición de datos en la interfaz principal para poder acceder a la función sin
+  pasos adicionales tras importar.
