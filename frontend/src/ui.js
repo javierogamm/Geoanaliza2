@@ -262,11 +262,11 @@ export function clearResults() {
   if (exportButton) exportButton.disabled = true;
 }
 
-// 👉 Formateo numérico para CSV en locale es-ES: decimal con coma
+// 👉 Coordenadas en CSV deben mantenerse literales, sin aplicar formato local
 function formatNumberForCsv(value) {
   if (typeof value !== 'number') return '';
-  // 37.37398 -> "37,37398"
-  return value.toFixed(5).replace('.', ',');
+  // Se devuelve tal cual para evitar agrupación de miles o cambio de separador decimal
+  return value.toString();
 }
 
 // Escapa valores para CSV (usamos ; como separador)
