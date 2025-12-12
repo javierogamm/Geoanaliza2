@@ -8,14 +8,14 @@ import {
   getCurrentPoints,
   getCustomColumnsDataMap
 } from './ui.js';
-import { initColumnModal } from './columnModal.js';
+import { initColumnModal, registerDetectedExtraProvider } from './columnModal.js';
 import { initBaseColumnsModal, openBaseColumnsModal, hasBaseColumnsConfig } from './baseColumnsModal.js';
 import { initImportExcel, getExpedientesData, hasExpedientes } from './importExcel.js';
 import { initImportCsv } from './importCsv.js';
 import { initTranspose, showTransposeButton, hideTransposeButton } from './transposeData.js';
 import { addCustomColumn } from './columnManager.js';
 import { initCreateExpedients } from './createExpedients.js';
-import { initThesaurusDetector } from './thesaurusDetector.js';
+import { initThesaurusDetector, getPendingThesaurusExtra } from './thesaurusDetector.js';
 
 const form = document.getElementById('search-form');
 const cityInput = document.getElementById('city');
@@ -330,6 +330,7 @@ initCreateExpedients();
 
 // Inicializar identificador de tesauros a partir de texto pegado
 initThesaurusDetector({ refreshTable: refreshTableWithCurrentData });
+registerDetectedExtraProvider(() => getPendingThesaurusExtra());
 
 if (limitInput) {
   limitInput.addEventListener('input', (event) => syncLimitInputs(event.target.value));
