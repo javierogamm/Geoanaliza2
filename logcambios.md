@@ -131,3 +131,13 @@
 ## Versión 1.8.3 - 2025-12-14
 - La exportación CSV principal conserva las coordenadas tal como se generan (sin redondeos ni formatos locales), evitando que
   se alteren por separadores de miles al abrir el archivo.
+
+## Versión 1.8.4 - 2025-12-14
+- Centraliza la construcción del CSV de transposición en un módulo reutilizable para mantener los campos y valores tal como se
+  generan en pantalla.
+- Simula la exportación con datos de ejemplo para comprobar que las filas exportadas conservan valores críticos como
+  dirección, latitud y longitud sin alteraciones.
+
+## Versión 1.8.5 - 2025-12-14
+- La exportación CSV de la transposición fuerza las coordenadas a texto para que Excel mantenga los puntos decimales exactos
+  que se muestran en la aplicación sin reinterpretarlos como millones u otros formatos numéricos.

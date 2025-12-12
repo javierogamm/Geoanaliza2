@@ -1,6 +1,7 @@
 import { getExpedientesData } from './importExcel.js';
 import { formatCellValue, getCustomColumns } from './columnManager.js';
 import { getBaseColumnsConfig } from './baseColumnsModal.js';
+import { buildTransposedCsvContent } from './transposedExport.js';
 
 const modal = document.getElementById('transpose-modal');
 const transposeBtn = document.getElementById('transpose-btn');
@@ -349,36 +350,7 @@ function exportToCSV() {
     return;
   }
 
-  const { headers, rows } = transposedData;
-
-  // Crear headers para exportación: Nombre entid | Código expedi | Nombre tarea | Crear tarea | Nombre campo | Tipo campo te | Valor campo | Valor campo a
-  const exportHeaders = [
-    'Nombre entid',
-    'Código expedi',
-    'Nombre tarea',
-    'Crear tarea',
-    'Nombre campo',
-    'Tipo campo te',
-    'Valor campo',
-    'Valor campo a'
-  ];
-
-  // Crear filas para exportación añadiendo Nombre entidad al inicio y rellenando Nombre tarea
-  const exportRows = rows.map((row) => {
-    return [
-      nombreEntidad,      // Nombre entid
-      row[0],             // Código expedi
-      nombreTarea,        // Nombre tarea
-      row[2],             // Crear tarea
-      row[3],             // Nombre campo
-      row[4],             // Tipo campo te
-      row[5],             // Valor campo
-      row[6]              // Valor campo a
-    ];
-  });
-
-  const csvRows = [exportHeaders, ...exportRows];
-  const csvContent = csvRows.map((row) => row.map(escapeCsvValue).join(';')).join('\r\n');
+  const csvContent = buildTransposedCsvContent(transposedData, nombreEntidad, nombreTarea);
   const bom = '\uFEFF';
   const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -390,12 +362,4 @@ function exportToCSV() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-}
-
-function escapeCsvValue(value) {
-  const str = String(value ?? '');
-  if (str.includes('"') || str.includes(';') || str.includes(',') || str.includes('\n')) {
-    return '"' + str.replace(/"/g, '""') + '"';
-  }
-  return str;
 }
