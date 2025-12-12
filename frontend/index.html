@@ -99,6 +99,9 @@
             <button id="transpose-btn" type="button" class="btn btn-transpose" style="display: none;">
               🔄 Transponer datos
             </button>
+            <button id="thesaurus-detector-btn" type="button" class="btn btn-import">
+              🧭 Detectar tesauros
+            </button>
             <button id="create-expedients-btn" type="button" class="btn btn-primary">
               ✨ Crear Expedientes
             </button>
@@ -245,6 +248,51 @@
               <button type="submit" class="btn">Importar</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Modal para detectar tesauros desde texto pegado -->
+      <div id="thesaurus-detector-modal" class="modal">
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <h3>Detectar nombres de tesauro</h3>
+            <button id="close-thesaurus-modal" class="btn-close">&times;</button>
+          </div>
+          <div class="column-form">
+            <p class="help-text" id="thesaurus-feedback">
+              Pega el texto con formato <strong>Campo: Nombre de tesauro</strong> para identificar los valores.
+            </p>
+
+            <div class="field">
+              <label for="thesaurus-paste">Texto pegado</label>
+              <textarea id="thesaurus-paste" class="textarea" rows="6" placeholder="Ejemplo:&#10;Longitud: Longitud (Vic)&#10;Latitud: Latitud (Vic)"></textarea>
+            </div>
+
+            <div class="modal-actions" style="justify-content: flex-end; gap: 10px;">
+              <button type="button" id="thesaurus-analyze-btn" class="btn-secondary">Detectar tesauros</button>
+            </div>
+
+            <div class="thesaurus-section">
+              <h4>Campos base</h4>
+              <div id="thesaurus-base-results" class="thesaurus-grid"></div>
+            </div>
+
+            <div class="thesaurus-section">
+              <div class="thesaurus-section-header">
+                <h4>Campos adicionales</h4>
+                <label class="thesaurus-check" for="thesaurus-select-all">
+                  <input type="checkbox" id="thesaurus-select-all" checked />
+                  <span>Seleccionar todos</span>
+                </label>
+              </div>
+              <div id="thesaurus-extra-list" class="thesaurus-list"></div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" id="cancel-thesaurus-modal" class="btn-secondary">Cancelar</button>
+              <button type="button" id="thesaurus-continue-btn" class="btn">Validar tesauros</button>
+            </div>
+          </div>
         </div>
       </div>
 

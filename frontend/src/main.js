@@ -8,13 +8,14 @@ import {
   getCurrentPoints,
   getCustomColumnsDataMap
 } from './ui.js';
-import { initColumnModal } from './columnModal.js';
+import { initColumnModal, registerDetectedExtraProvider } from './columnModal.js';
 import { initBaseColumnsModal, openBaseColumnsModal, hasBaseColumnsConfig } from './baseColumnsModal.js';
 import { initImportExcel, getExpedientesData, hasExpedientes } from './importExcel.js';
 import { initImportCsv } from './importCsv.js';
 import { initTranspose, showTransposeButton, hideTransposeButton } from './transposeData.js';
 import { addCustomColumn } from './columnManager.js';
 import { initCreateExpedients } from './createExpedients.js';
+import { initThesaurusDetector, getPendingThesaurusExtra } from './thesaurusDetector.js';
 
 const form = document.getElementById('search-form');
 const cityInput = document.getElementById('city');
@@ -169,6 +170,20 @@ function hasData() {
   return (lastPointsData && lastPointsData.points && lastPointsData.points.length > 0) || mockPoints.length > 0;
 }
 
+function refreshTableWithCurrentData() {
+  if (lastPointsData && lastPointsData.points && lastPointsData.points.length > 0) {
+    renderPoints(lastPointsData.points);
+    return;
+  }
+
+  if (mockPoints.length > 0) {
+    renderPoints(mockPoints);
+    return;
+  }
+
+  renderPoints([]);
+}
+
 // Función para generar puntos ficticios
 function generateMockPoints(numRows) {
   mockPoints = [];
@@ -312,6 +327,10 @@ initTranspose(getCurrentPoints, getCustomColumnsDataMap);
 
 // Inicializar el módulo de crear expedientes
 initCreateExpedients();
+
+// Inicializar identificador de tesauros a partir de texto pegado
+initThesaurusDetector({ refreshTable: refreshTableWithCurrentData });
+registerDetectedExtraProvider(() => getPendingThesaurusExtra());
 
 if (limitInput) {
   limitInput.addEventListener('input', (event) => syncLimitInputs(event.target.value));
@@ -499,7 +518,7 @@ function initAreaMap() {
     attribution: 'Datos geográficos © OpenStreetMap contributors'
   }).addTo(mapInstance);
 
-  pointsLayerGroup = L.layerGroup().addTo(mapInstance);
+  pointsLayerGroup = L.featureGroup().addTo(mapInstance);
 
   mapInstance.on('click', handleMapClick);
   mapInstance.on('mousemove', (event) => {

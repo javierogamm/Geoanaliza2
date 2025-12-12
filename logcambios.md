@@ -83,3 +83,20 @@
 - Añade un selector de modo para elegir entre búsqueda por municipio o por mapa, mostrando solo los controles necesarios en cada caso y sincronizando el límite de puntos entre ambos flujos.
 - Duplica la altura del mapa y permite desplazarlo con el botón derecho mientras se dibujan polígonos, mejorando la navegación sin afectar al despliegue existente.
 - Dibuja en el mapa los puntos obtenidos en las búsquedas, ajustando automáticamente la vista cuando no se está editando un área.
+
+## Versión 1.7.0 - 2025-12-11
+- Se añade un modal para pegar listados de campos y detectar automáticamente los nombres de tesauros, proponiendo referencias sin espacios ni tildes.
+- Los campos base (dirección, latitud y longitud) se pueden validar desde el detector y aplicar directamente a la configuración base de la tabla.
+- Los campos adicionales detectados se pueden abrir secuencialmente en el modal de columnas personalizadas con los nombres sugeridos, agilizando su alta sin romper el mapa ni los tesauros existentes.
+
+## Versión 1.7.1 - 2025-12-12
+- Al validar tesauros se precargan por defecto los nombres de Dirección, Latitud y Longitud para que queden configurados aunque no se detecten en el pegado.
+- Los tesauros adicionales detectados ahora proponen referencias en camelCase y pueden reutilizarse al pulsar "Crear columna", preguntando si se desea configurar alguno pendiente.
+- Se sincroniza el flujo de apertura y cierre de modales para que validar tesauros abra correctamente las columnas detectadas y las marque como usadas al añadirlas.
+
+## Versión 1.7.2 - 2025-12-12
+- Conservar los tesauros adicionales detectados al cerrar el modal de validación permite que el botón "Crear columna" pregunte y abra con los datos sugeridos.
+
+## Versión 1.7.3 - 2025-12-12
+- Sustituye el `layerGroup` de marcadores por un `featureGroup` en el mapa para poder calcular los límites de los puntos sin
+  errores al buscar por población y ajustar correctamente la vista a los resultados.
