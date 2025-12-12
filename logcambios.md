@@ -149,3 +149,7 @@
   cambiando al modo de mapa para seguir trabajando con ellos.
 - Las búsquedas por ciudad o área marcan el paso como completado y pintan los resultados en el mapa manteniendo el resto de
   acciones (CSV, columnas y creación de expedientes) disponibles debajo.
+
+## Versión 1.9.1 - 2025-12-16
+- Los campos numéricos y de moneda empiezan sin tramos definidos y solo activan la distribución porcentual al añadir un
+  nuevo tramo, mostrando los campos de porcentaje y validando que la suma alcance el 100%.
