@@ -264,7 +264,11 @@ function handleColumnAddedFromQueue() {
   setTimeout(openNextCustomColumn, 120);
 }
 
-function handleColumnModalClosed() {
+function handleColumnModalClosed(event) {
+  const reason = event?.detail?.reason || 'cancel';
+  if (reason === 'submit' && pendingThesaurusExtras.length > 0) {
+    return;
+  }
   isUsingDetectedPrefill = false;
 }
 
