@@ -78,6 +78,8 @@ function showFieldSelectionModal() {
     return;
   }
 
+  document.dispatchEvent(new CustomEvent('transposition-started'));
+
   // Limpiar checkboxes
   baseFieldsCheckboxes.innerHTML = '';
   customFieldsCheckboxes.innerHTML = '';
@@ -362,4 +364,5 @@ function exportToCSV() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+  document.dispatchEvent(new CustomEvent('transposition-exported'));
 }

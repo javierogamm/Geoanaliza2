@@ -90,6 +90,11 @@ h1 {
   font-size: 14px;
 }
 
+.step-feedback--active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .step-feedback--skipped {
   color: #fcd34d;
 }
@@ -98,6 +103,16 @@ h1 {
   border-style: dashed;
   border-color: rgba(252, 211, 77, 0.6);
   background: rgba(252, 211, 77, 0.05);
+}
+
+.step-panel.is-active {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.12);
+}
+
+.step-panel.is-done {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: rgba(16, 185, 129, 0.04);
 }
 
 .panel {

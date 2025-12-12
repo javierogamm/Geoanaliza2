@@ -153,3 +153,15 @@
 ## Versión 1.9.1 - 2025-12-16
 - Los campos numéricos y de moneda empiezan sin tramos definidos y solo activan la distribución porcentual al añadir un
   nuevo tramo, mostrando los campos de porcentaje y validando que la suma alcance el 100%.
+
+## Versión 1.9.2 - 2025-12-16
+- Los pasos iniciales de la interfaz se marcan automáticamente al importar expedientes, dibujar áreas y lanzar búsquedas,
+  mostrando mensajes de progreso mientras se cargan puntos y se pintan en el mapa.
+- Se resaltan visualmente los bloques activos y completados para seguir el flujo sin afectar mapas, despliegues ni el
+  comportamiento existente.
+
+## Versión 1.9.3 - 2025-12-17
+- Cada fase se marca en verde al completarse, incluyendo el pintado de puntos en mapa, la validación de tesauros pegados y
+  la exportación exitosa de la transposición.
+- Los bloques activos hacen scroll automático al activarse, manteniendo la guía visual del flujo sin alterar el mapa ni
+  los resultados.
