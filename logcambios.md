@@ -83,3 +83,8 @@
 - Añade un selector de modo para elegir entre búsqueda por municipio o por mapa, mostrando solo los controles necesarios en cada caso y sincronizando el límite de puntos entre ambos flujos.
 - Duplica la altura del mapa y permite desplazarlo con el botón derecho mientras se dibujan polígonos, mejorando la navegación sin afectar al despliegue existente.
 - Dibuja en el mapa los puntos obtenidos en las búsquedas, ajustando automáticamente la vista cuando no se está editando un área.
+
+## Versión 1.7.0 - 2025-12-11
+- Se añade un modal para pegar listados de campos y detectar automáticamente los nombres de tesauros, proponiendo referencias sin espacios ni tildes.
+- Los campos base (dirección, latitud y longitud) se pueden validar desde el detector y aplicar directamente a la configuración base de la tabla.
+- Los campos adicionales detectados se pueden abrir secuencialmente en el modal de columnas personalizadas con los nombres sugeridos, agilizando su alta sin romper el mapa ni los tesauros existentes.

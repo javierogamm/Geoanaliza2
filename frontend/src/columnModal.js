@@ -25,6 +25,7 @@ const configSections = {
 let onColumnAddedCallback = null;
 // Función para verificar si hay datos cargados
 let hasDataCallback = null;
+let pendingPrefill = null;
 
 export function initColumnModal(onColumnAdded, hasData) {
   onColumnAddedCallback = onColumnAdded;
@@ -68,6 +69,16 @@ function openModal() {
   modal.classList.add('active');
   resetForm();
 
+  if (pendingPrefill) {
+    document.getElementById('column-name').value = pendingPrefill.name;
+    document.getElementById('column-reference').value = pendingPrefill.reference;
+    if (pendingPrefill.type) {
+      document.getElementById('column-type').value = pendingPrefill.type;
+      handleTypeChange({ target: { value: pendingPrefill.type } });
+    }
+    pendingPrefill = null;
+  }
+
   // Mostrar campo de número de filas solo si no hay datos
   if (hasDataCallback && !hasDataCallback()) {
     rowsField.style.display = 'block';
@@ -81,6 +92,11 @@ function openModal() {
 function closeModal() {
   modal.classList.remove('active');
   resetForm();
+}
+
+export function openColumnModalWithPrefill(prefill) {
+  pendingPrefill = prefill;
+  openModal();
 }
 
 function resetForm() {
@@ -175,6 +191,16 @@ function handleFormSubmit(e) {
   if (onColumnAddedCallback) {
     onColumnAddedCallback(numRows);
   }
+
+  document.dispatchEvent(
+    new CustomEvent('column-added', {
+      detail: {
+        name: columnName,
+        reference: columnReference,
+        type: columnType
+      }
+    })
+  );
 }
 
 function extractConfig(type) {

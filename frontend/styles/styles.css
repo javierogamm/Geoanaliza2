@@ -689,6 +689,84 @@ select:focus {
   box-shadow: 0 12px 30px rgba(139, 92, 246, 0.35);
 }
 
+.textarea {
+  width: 100%;
+  min-height: 160px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #0b1221;
+  color: var(--text);
+  padding: 12px;
+  resize: vertical;
+}
+
+.thesaurus-section {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  margin-top: 12px;
+}
+
+.thesaurus-section h4 {
+  margin: 0 0 8px;
+}
+
+.thesaurus-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.thesaurus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.thesaurus-row {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(59, 130, 246, 0.05);
+  display: grid;
+  gap: 6px;
+}
+
+.thesaurus-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.thesaurus-list {
+  display: grid;
+  gap: 8px;
+}
+
+.thesaurus-extra {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.06);
+  cursor: pointer;
+}
+
+.thesaurus-extra input {
+  margin-top: 4px;
+}
+
+.thesaurus-extra strong {
+  display: block;
+}
+
 @media (max-width: 640px) {
   .btn {
     width: 100%;

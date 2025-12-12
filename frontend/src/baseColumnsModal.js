@@ -9,6 +9,19 @@ let baseColumnsConfig = null;
 // Callback que se ejecuta cuando se configura
 let onConfiguredCallback = null;
 
+function normalizeReference(value, fallback) {
+  if (!value) return fallback;
+  const normalized = value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-zA-Z0-9]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .toLowerCase();
+
+  return normalized || fallback;
+}
+
 export function initBaseColumnsModal(onConfigured) {
   onConfiguredCallback = onConfigured;
 
@@ -23,24 +36,25 @@ export function initBaseColumnsModal(onConfigured) {
   form.addEventListener('submit', handleFormSubmit);
 }
 
-export function openBaseColumnsModal() {
-  // Inicializar valores por defecto si no hay configuración
-  if (!baseColumnsConfig) {
-    document.getElementById('street-name').value = 'Dirección';
-    document.getElementById('street-reference').value = 'direccion';
-    document.getElementById('lat-name').value = 'Latitud';
-    document.getElementById('lat-reference').value = 'latitud';
-    document.getElementById('lng-name').value = 'Longitud';
-    document.getElementById('lng-reference').value = 'longitud';
-  } else {
-    // Cargar configuración existente
-    document.getElementById('street-name').value = baseColumnsConfig.street.name;
-    document.getElementById('street-reference').value = baseColumnsConfig.street.reference;
-    document.getElementById('lat-name').value = baseColumnsConfig.lat.name;
-    document.getElementById('lat-reference').value = baseColumnsConfig.lat.reference;
-    document.getElementById('lng-name').value = baseColumnsConfig.lng.name;
-    document.getElementById('lng-reference').value = baseColumnsConfig.lng.reference;
-  }
+export function openBaseColumnsModal(prefillConfig) {
+  const defaults = {
+    street: { name: 'Dirección', reference: 'direccion' },
+    lat: { name: 'Latitud', reference: 'latitud' },
+    lng: { name: 'Longitud', reference: 'longitud' }
+  };
+
+  const configToUse = {
+    street: prefillConfig?.street || baseColumnsConfig?.street || defaults.street,
+    lat: prefillConfig?.lat || baseColumnsConfig?.lat || defaults.lat,
+    lng: prefillConfig?.lng || baseColumnsConfig?.lng || defaults.lng
+  };
+
+  document.getElementById('street-name').value = configToUse.street.name;
+  document.getElementById('street-reference').value = configToUse.street.reference;
+  document.getElementById('lat-name').value = configToUse.lat.name;
+  document.getElementById('lat-reference').value = configToUse.lat.reference;
+  document.getElementById('lng-name').value = configToUse.lng.name;
+  document.getElementById('lng-reference').value = configToUse.lng.reference;
 
   modal.classList.add('active');
 }
@@ -64,19 +78,16 @@ function handleFormSubmit(e) {
     return;
   }
 
-  // Guardar configuración
-  baseColumnsConfig = {
-    street: { name: streetName, reference: streetReference },
-    lat: { name: latName, reference: latReference },
-    lng: { name: lngName, reference: lngReference }
-  };
+  setBaseColumnsConfig(
+    {
+      street: { name: streetName, reference: streetReference },
+      lat: { name: latName, reference: latReference },
+      lng: { name: lngName, reference: lngReference }
+    },
+    { runCallback: true }
+  );
 
   closeModal();
-
-  // Ejecutar callback
-  if (onConfiguredCallback) {
-    onConfiguredCallback(baseColumnsConfig);
-  }
 }
 
 export function getBaseColumnsConfig() {
@@ -85,4 +96,27 @@ export function getBaseColumnsConfig() {
 
 export function hasBaseColumnsConfig() {
   return baseColumnsConfig !== null;
+}
+
+export function setBaseColumnsConfig(config, { runCallback = false } = {}) {
+  baseColumnsConfig = {
+    street: {
+      name: config.street.name,
+      reference: normalizeReference(config.street.reference, 'direccion')
+    },
+    lat: {
+      name: config.lat.name,
+      reference: normalizeReference(config.lat.reference, 'latitud')
+    },
+    lng: {
+      name: config.lng.name,
+      reference: normalizeReference(config.lng.reference, 'longitud')
+    }
+  };
+
+  if (runCallback && onConfiguredCallback) {
+    onConfiguredCallback(baseColumnsConfig);
+  }
+
+  return baseColumnsConfig;
 }
