@@ -93,3 +93,6 @@
 - Al validar tesauros se precargan por defecto los nombres de Dirección, Latitud y Longitud para que queden configurados aunque no se detecten en el pegado.
 - Los tesauros adicionales detectados ahora proponen referencias en camelCase y pueden reutilizarse al pulsar "Crear columna", preguntando si se desea configurar alguno pendiente.
 - Se sincroniza el flujo de apertura y cierre de modales para que validar tesauros abra correctamente las columnas detectadas y las marque como usadas al añadirlas.
+
+## Versión 1.7.2 - 2025-12-12
+- Conservar los tesauros adicionales detectados al cerrar el modal de validación permite que el botón "Crear columna" pregunte y abra con los datos sugeridos.

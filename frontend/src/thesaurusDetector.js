@@ -51,9 +51,11 @@ function openModal() {
   pasteInput?.focus();
 }
 
-function closeModal() {
+function closeModal({ preserveExtras = false } = {}) {
   modal.classList.remove('active');
-  pendingThesaurusExtras = [];
+  if (!preserveExtras) {
+    pendingThesaurusExtras = [];
+  }
   isUsingDetectedPrefill = false;
 }
 
@@ -111,7 +113,7 @@ function handleContinue() {
 
   pendingThesaurusExtras = collectSelectedExtras();
   isUsingDetectedPrefill = false;
-  closeModal();
+  closeModal({ preserveExtras: true });
   openNextCustomColumn();
 }
 
