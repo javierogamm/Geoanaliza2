@@ -54,6 +54,52 @@ h1 {
   color: var(--muted);
 }
 
+.step-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.step-badge {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.step-feedback {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.step-feedback--skipped {
+  color: #fcd34d;
+}
+
+.step-panel.is-skipped {
+  border-style: dashed;
+  border-color: rgba(252, 211, 77, 0.6);
+  background: rgba(252, 211, 77, 0.05);
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
