@@ -83,3 +83,7 @@
 - Añade un selector de modo para elegir entre búsqueda por municipio o por mapa, mostrando solo los controles necesarios en cada caso y sincronizando el límite de puntos entre ambos flujos.
 - Duplica la altura del mapa y permite desplazarlo con el botón derecho mientras se dibujan polígonos, mejorando la navegación sin afectar al despliegue existente.
 - Dibuja en el mapa los puntos obtenidos en las búsquedas, ajustando automáticamente la vista cuando no se está editando un área.
+
+## Versión 1.6.1 - 2025-12-11
+- Muestra un primer tramo por defecto en columnas numéricas y de moneda, permitiendo asignar porcentajes y añadir nuevos tramos sin bloquear la creación cuando los rangos están vacíos.
+- Gestiona en secuencia la validación de tesauros detectados, abriendo el modal de columnas para cada elemento pendiente hasta completar la lista.

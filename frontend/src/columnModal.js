@@ -26,25 +26,31 @@ let onColumnAddedCallback = null;
 // Función para verificar si hay datos cargados
 let hasDataCallback = null;
 
+// Gestión de la cola de tesauros detectados
+let detectedThesaurusQueue = [];
+let onDetectedQueueComplete = null;
+let isProcessingDetectedQueue = false;
+let currentPrefill = null;
+
 export function initColumnModal(onColumnAdded, hasData) {
   onColumnAddedCallback = onColumnAdded;
   hasDataCallback = hasData;
 
   // Abrir modal
-  openBtn.addEventListener('click', openModal);
+  openBtn.addEventListener('click', () => showModal());
 
   // Cerrar modal
-  closeBtn.addEventListener('click', closeModal);
-  cancelBtn.addEventListener('click', closeModal);
+  closeBtn.addEventListener('click', () => closeModal());
+  cancelBtn.addEventListener('click', () => closeModal());
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeModal();
   });
 
   // Cambio de tipo de columna
-  typeSelect.addEventListener('change', handleTypeChange);
+  typeSelect.addEventListener('change', (event) => handleTypeChange(event.target.value));
 
   // Añadir opción al selector
-  document.getElementById('add-option-btn').addEventListener('click', addSelectorOption);
+  document.getElementById('add-option-btn').addEventListener('click', () => addSelectorOption());
 
   // Añadir tramos porcentuales
   addNumberRangeBtn.addEventListener('click', () =>
@@ -58,39 +64,34 @@ export function initColumnModal(onColumnAdded, hasData) {
   form.addEventListener('submit', handleFormSubmit);
 
   // Inicializar fechas por defecto
-  const today = new Date().toISOString().split('T')[0];
-  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  document.getElementById('date-min').value = oneYearAgo;
-  document.getElementById('date-max').value = today;
+  setDefaultDates();
 }
 
-function openModal() {
+function showModal(prefillData = null) {
+  currentPrefill = prefillData;
   modal.classList.add('active');
   resetForm();
-
-  // Mostrar campo de número de filas solo si no hay datos
-  if (hasDataCallback && !hasDataCallback()) {
-    rowsField.style.display = 'block';
-    numRowsInput.required = true;
-  } else {
-    rowsField.style.display = 'none';
-    numRowsInput.required = false;
-  }
+  toggleRowsField();
+  applyPrefill(prefillData);
 }
 
-function closeModal() {
+function closeModal({ abortQueue = true } = {}) {
   modal.classList.remove('active');
   resetForm();
+
+  if (abortQueue) {
+    resetDetectedQueue();
+  }
 }
 
 function resetForm() {
   form.reset();
   hideAllConfigSections();
-  document.getElementById('selector-options').innerHTML = '';
-  numberRangesContainer.innerHTML = '';
-  currencyRangesContainer.innerHTML = '';
+  clearSelectorOptions();
+  clearRangeContainers();
   document.getElementById('number-decimals').value = '2';
   document.getElementById('currency-decimals').value = '2';
+  setDefaultDates();
 }
 
 function hideAllConfigSections() {
@@ -99,27 +100,59 @@ function hideAllConfigSections() {
   });
 }
 
-function handleTypeChange(e) {
+function toggleRowsField() {
+  const shouldShowRowsField = hasDataCallback && !hasDataCallback();
+  rowsField.style.display = shouldShowRowsField ? 'block' : 'none';
+  numRowsInput.required = shouldShowRowsField;
+}
+
+function clearSelectorOptions() {
+  document.getElementById('selector-options').innerHTML = '';
+}
+
+function clearRangeContainers() {
+  numberRangesContainer.innerHTML = '';
+  currencyRangesContainer.innerHTML = '';
+}
+
+function populateSelectorOptions(options) {
+  if (Array.isArray(options) && options.length > 0) {
+    options.forEach(option => addSelectorOption(option));
+    return;
+  }
+
+  addSelectorOption();
+  addSelectorOption();
+}
+
+function handleTypeChange(type, config = null) {
   hideAllConfigSections();
-  const type = e.target.value;
+  clearSelectorOptions();
+  clearRangeContainers();
 
   if (type && configSections[type]) {
     configSections[type].style.display = 'block';
 
-    // Si es selector, añadimos 2 opciones por defecto
     if (type === 'selector') {
-      const container = document.getElementById('selector-options');
-      if (container.children.length === 0) {
-        addSelectorOption();
-        addSelectorOption();
-      }
+      populateSelectorOptions(config?.options);
+    }
+
+    if (type === 'number') {
+      applyNumberConfig(config);
+    }
+
+    if (type === 'currency') {
+      applyCurrencyConfig(config);
+    }
+
+    if (type === 'date') {
+      applyDateConfig(config);
     }
   }
 }
 
-function addSelectorOption() {
+function addSelectorOption(defaults = {}) {
   const container = document.getElementById('selector-options');
-  const optionIndex = container.children.length;
 
   const optionDiv = document.createElement('div');
   optionDiv.className = 'selector-option';
@@ -130,7 +163,62 @@ function addSelectorOption() {
     <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
   `;
 
+  optionDiv.querySelector('.option-reference').value = defaults.reference ?? '';
+  optionDiv.querySelector('.option-value').value = defaults.value ?? '';
+  optionDiv.querySelector('.option-percentage').value = defaults.percentage ?? '';
+
   container.appendChild(optionDiv);
+}
+
+function applyNumberConfig(config) {
+  document.getElementById('number-min').value = config?.min ?? '';
+  document.getElementById('number-max').value = config?.max ?? '';
+
+  if (config?.decimals !== undefined) {
+    document.getElementById('number-decimals').value = config.decimals;
+  }
+
+  renderRangeList(numberRangesContainer, 'number-min', 'number-max', config?.ranges);
+}
+
+function applyCurrencyConfig(config) {
+  document.getElementById('currency-min').value = config?.min ?? '';
+  document.getElementById('currency-max').value = config?.max ?? '';
+
+  if (config?.decimals !== undefined) {
+    document.getElementById('currency-decimals').value = config.decimals;
+  }
+
+  renderRangeList(currencyRangesContainer, 'currency-min', 'currency-max', config?.ranges);
+}
+
+function applyDateConfig(config) {
+  if (config?.min) {
+    document.getElementById('date-min').value = config.min;
+  }
+
+  if (config?.max) {
+    document.getElementById('date-max').value = config.max;
+  }
+}
+
+function setDefaultDates() {
+  const today = new Date().toISOString().split('T')[0];
+  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  document.getElementById('date-min').value = oneYearAgo;
+  document.getElementById('date-max').value = today;
+}
+
+function applyPrefill(prefillData) {
+  if (!prefillData) return;
+
+  document.getElementById('column-name').value = prefillData.name ?? '';
+  document.getElementById('column-reference').value = prefillData.reference ?? '';
+
+  if (prefillData.type) {
+    typeSelect.value = prefillData.type;
+    handleTypeChange(prefillData.type, prefillData.config ?? null);
+  }
 }
 
 function handleFormSubmit(e) {
@@ -169,12 +257,14 @@ function handleFormSubmit(e) {
     config: config
   });
 
-  closeModal();
+  closeModal({ abortQueue: false });
 
   // Ejecutar callback con el número de filas
   if (onColumnAddedCallback) {
     onColumnAddedCallback(numRows);
   }
+
+  processNextDetectedThesaurus();
 }
 
 function extractConfig(type) {
@@ -309,6 +399,23 @@ function parseDecimals(inputId, fallback) {
   return Math.min(parsed, 10);
 }
 
+function renderRangeList(container, minFieldId, maxFieldId, ranges = []) {
+  container.innerHTML = '';
+
+  if (Array.isArray(ranges) && ranges.length > 0) {
+    ranges.forEach(range => {
+      addRangeRow(container, {
+        min: range?.min ?? '',
+        max: range?.max ?? '',
+        percentage: range?.percentage ?? ''
+      });
+    });
+    return;
+  }
+
+  addRangeRow(container, getDefaultRangeValues(container, minFieldId, maxFieldId));
+}
+
 function addRangeRow(container, defaults = {}) {
   const row = document.createElement('div');
   row.className = 'range-row field-group';
@@ -357,11 +464,18 @@ function extractRanges(container, label) {
 
   const ranges = [];
   let totalPercentage = 0;
+  let hasAnyValue = false;
 
   rows.forEach((row) => {
-    const minValue = parseFloat(row.querySelector('.range-min').value);
-    const maxValue = parseFloat(row.querySelector('.range-max').value);
-    const percentage = parseFloat(row.querySelector('.range-percentage').value);
+    const minField = row.querySelector('.range-min').value;
+    const maxField = row.querySelector('.range-max').value;
+    const percentageField = row.querySelector('.range-percentage').value;
+
+    hasAnyValue ||= Boolean(minField || maxField || percentageField);
+
+    const minValue = parseFloat(minField);
+    const maxValue = parseFloat(maxField);
+    const percentage = parseFloat(percentageField);
 
     if ([minValue, maxValue, percentage].some((v) => Number.isNaN(v))) {
       return;
@@ -376,6 +490,10 @@ function extractRanges(container, label) {
   });
 
   if (ranges.length === 0) {
+    if (!hasAnyValue) {
+      return [];
+    }
+
     alert(`Debes añadir tramos de ${label} válidos o eliminar los existentes para continuar.`);
     return null;
   }
@@ -406,6 +524,46 @@ function extractDateConfig() {
   }
 
   return { min, max };
+}
+
+function processNextDetectedThesaurus() {
+  if (!isProcessingDetectedQueue) {
+    resetDetectedQueue();
+    return;
+  }
+
+  if (detectedThesaurusQueue.length === 0) {
+    const completionCallback = onDetectedQueueComplete;
+    resetDetectedQueue();
+
+    if (completionCallback) {
+      completionCallback();
+    }
+    return;
+  }
+
+  const nextThesaurus = detectedThesaurusQueue.shift();
+  showModal(nextThesaurus);
+}
+
+function resetDetectedQueue() {
+  detectedThesaurusQueue = [];
+  onDetectedQueueComplete = null;
+  isProcessingDetectedQueue = false;
+  currentPrefill = null;
+}
+
+export function startDetectedThesaurusValidation(detectedTesauros, onComplete) {
+  if (!Array.isArray(detectedTesauros) || detectedTesauros.length === 0) {
+    return;
+  }
+
+  detectedThesaurusQueue = [...detectedTesauros];
+  onDetectedQueueComplete = onComplete || null;
+  isProcessingDetectedQueue = true;
+
+  const firstThesaurus = detectedThesaurusQueue.shift();
+  showModal(firstThesaurus);
 }
 
 export function enableAddColumnButton() {
