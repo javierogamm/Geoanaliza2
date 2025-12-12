@@ -6,14 +6,15 @@ import {
   setStatus,
   exportCSV,
   getCurrentPoints,
-  getCustomColumnsDataMap
+  getCustomColumnsDataMap,
+  invalidateCustomColumnData
 } from './ui.js';
-import { initColumnModal, registerDetectedExtraProvider } from './columnModal.js';
+import { initColumnModal, openColumnModalForEdit, registerDetectedExtraProvider } from './columnModal.js';
 import { initBaseColumnsModal, openBaseColumnsModal, hasBaseColumnsConfig } from './baseColumnsModal.js';
 import { initImportExcel, getExpedientesData, hasExpedientes } from './importExcel.js';
 import { initImportCsv } from './importCsv.js';
 import { initTranspose, showTransposeButton, hideTransposeButton } from './transposeData.js';
-import { addCustomColumn } from './columnManager.js';
+import { addCustomColumn, getCustomColumns, removeCustomColumn } from './columnManager.js';
 import { initCreateExpedients } from './createExpedients.js';
 import { initThesaurusDetector, getPendingThesaurusExtra } from './thesaurusDetector.js';
 
@@ -32,6 +33,10 @@ const formPanel = document.querySelector('.form-panel');
 const mapPanel = document.querySelector('.area-panel');
 const areaStatus = document.getElementById('area-status');
 const areaCoordinatesContainer = document.getElementById('area-coordinates');
+const baseThesaurusList = document.getElementById('base-thesaurus-list');
+const customColumnsList = document.getElementById('custom-columns-list');
+const customThesaurusFeedback = document.getElementById('custom-thesaurus-feedback');
+const editBaseThesaurusBtn = document.getElementById('edit-base-thesaurus-btn');
 const MAX_LIMIT = 1000;
 const BATCH_SIZE = 100;
 const DEFAULT_LIMIT = 20;
@@ -184,6 +189,83 @@ function refreshTableWithCurrentData() {
   renderPoints([]);
 }
 
+function renderBaseThesaurusSection() {
+  if (!baseThesaurusList) return;
+
+  baseThesaurusList.innerHTML = '';
+  const defaults = {
+    street: { name: 'Dirección', reference: 'direccion' },
+    lat: { name: 'Latitud', reference: 'latitud' },
+    lng: { name: 'Longitud', reference: 'longitud' }
+  };
+
+  const config = getBaseColumnsConfig();
+  const entries = [config?.street || defaults.street, config?.lat || defaults.lat, config?.lng || defaults.lng];
+
+  entries.forEach((entry) => {
+    const tag = document.createElement('div');
+    tag.className = 'thesaurus-tag';
+    tag.innerHTML = `
+      <span>${entry.name}</span>
+      <span class="thesaurus-tag__reference">${entry.reference}</span>
+    `;
+    baseThesaurusList.appendChild(tag);
+  });
+}
+
+function formatColumnType(type) {
+  switch (type) {
+    case 'selector':
+      return 'Selector';
+    case 'number':
+      return 'Número';
+    case 'currency':
+      return 'Moneda';
+    case 'date':
+      return 'Fecha';
+    case 'csv':
+      return 'CSV';
+    default:
+      return type;
+  }
+}
+
+function renderCustomThesaurusSection() {
+  if (!customColumnsList || !customThesaurusFeedback) return;
+
+  customColumnsList.innerHTML = '';
+  const columns = getCustomColumns();
+
+  if (!columns.length) {
+    customThesaurusFeedback.textContent = 'No hay tesauros personalizados configurados todavía.';
+    return;
+  }
+
+  customThesaurusFeedback.textContent = 'Pulsa editar para ajustar o eliminar para quitar la columna.';
+
+  columns.forEach((column) => {
+    const chip = document.createElement('div');
+    chip.className = 'thesaurus-chip';
+    chip.innerHTML = `
+      <div class="thesaurus-chip__info">
+        <span class="thesaurus-chip__name">${column.name}</span>
+        <span class="thesaurus-chip__meta">${column.reference} · ${formatColumnType(column.type)}</span>
+      </div>
+      <div class="thesaurus-chip__actions">
+        <button class="chip-action" data-action="edit" data-column-id="${column.id}">Editar</button>
+        <button class="chip-action" data-action="delete" data-column-id="${column.id}">Eliminar</button>
+      </div>
+    `;
+
+    customColumnsList.appendChild(chip);
+  });
+}
+
+function renderThesaurusBoard() {
+  renderBaseThesaurusSection();
+  renderCustomThesaurusSection();
+}
+
 // Función para generar puntos ficticios
 function generateMockPoints(numRows) {
   mockPoints = [];
@@ -267,27 +349,31 @@ function generatePointsFromExpedientes(expedientes) {
 }
 
 // Inicializar el modal de columnas personalizadas
-initColumnModal((numRows) => {
-  // Callback: cuando se añade una columna
-  if (numRows) {
-    // Si se especifica número de filas, generar puntos ficticios
-    generateMockPoints(numRows);
-    renderPoints(mockPoints);
-  } else if (lastPointsData) {
-    // Si hay datos reales, re-renderizar con los datos
-    renderPoints(lastPointsData.points);
-  } else if (mockPoints.length > 0) {
-    // Si hay puntos ficticios, re-renderizar con ellos
-    renderPoints(mockPoints);
-  } else {
-    // Si no hay nada, renderizar tabla vacía
-    renderPoints([]);
-  }
-}, hasData);
+initColumnModal({
+  onSaved: ({ numRows, action, columnId }) => {
+    if (action === 'edit' && columnId) {
+      invalidateCustomColumnData(columnId);
+      refreshTableWithCurrentData();
+    } else if (numRows) {
+      generateMockPoints(numRows);
+      renderPoints(mockPoints);
+    } else if (lastPointsData) {
+      renderPoints(lastPointsData.points);
+    } else if (mockPoints.length > 0) {
+      renderPoints(mockPoints);
+    } else {
+      renderPoints([]);
+    }
+
+    renderThesaurusBoard();
+  },
+  hasData
+});
 
 // Inicializar el modal de tesauros base
 initBaseColumnsModal((config) => {
   // Una vez configurado, proceder con la búsqueda
+  renderThesaurusBoard();
   performSearch();
 });
 
@@ -320,6 +406,8 @@ initImportCsv((columnData) => {
   } else {
     renderPoints([]);
   }
+
+  renderThesaurusBoard();
 });
 
 // Inicializar el módulo de transposición
@@ -331,6 +419,7 @@ initCreateExpedients();
 // Inicializar identificador de tesauros a partir de texto pegado
 initThesaurusDetector({ refreshTable: refreshTableWithCurrentData });
 registerDetectedExtraProvider(() => getPendingThesaurusExtra());
+renderThesaurusBoard();
 
 if (limitInput) {
   limitInput.addEventListener('input', (event) => syncLimitInputs(event.target.value));
@@ -338,6 +427,39 @@ if (limitInput) {
 
 if (mapLimitInput) {
   mapLimitInput.addEventListener('input', (event) => syncLimitInputs(event.target.value));
+}
+
+if (customColumnsList) {
+  customColumnsList.addEventListener('click', (event) => {
+    const action = event.target?.dataset?.action;
+    const columnId = event.target?.dataset?.columnId;
+    if (!action || !columnId) return;
+
+    if (action === 'edit') {
+      const column = getCustomColumns().find((item) => item.id === columnId);
+      if (column) {
+        openColumnModalForEdit(column);
+      }
+      return;
+    }
+
+    if (action === 'delete') {
+      const column = getCustomColumns().find((item) => item.id === columnId);
+      const shouldDelete = confirm(`¿Eliminar el tesauro "${column?.name || 'sin nombre'}"?`);
+      if (!shouldDelete) return;
+
+      removeCustomColumn(columnId);
+      invalidateCustomColumnData(columnId);
+      renderThesaurusBoard();
+      refreshTableWithCurrentData();
+    }
+  });
+}
+
+if (editBaseThesaurusBtn) {
+  editBaseThesaurusBtn.addEventListener('click', () => {
+    openBaseColumnsModal(getBaseColumnsConfig());
+  });
 }
 
 if (searchModeRadios?.length) {

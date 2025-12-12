@@ -11,6 +11,7 @@ const exportButton = document.getElementById('export-btn');
 let currentPoints = [];
 // Guardamos los datos generados para las columnas personalizadas
 let customColumnsData = new Map(); // Map<pointId, Map<columnId, value>>
+let columnsToRegenerate = new Set();
 
 export function setStatus(message, isError = false, { loading = false } = {}) {
   statusMessage.textContent = message;
@@ -208,6 +209,7 @@ function generateCustomColumnsData() {
   const customColumns = getCustomColumns();
   const previousData = new Map(customColumnsData);
   customColumnsData = new Map();
+  const columnsNeedingRefresh = new Set(columnsToRegenerate);
 
   currentPoints.forEach((point, index) => {
     const pointData = new Map();
@@ -215,7 +217,8 @@ function generateCustomColumnsData() {
 
     customColumns.forEach((column) => {
       const existingValue = existingPointData ? existingPointData.get(column.id) : undefined;
-      const value = existingValue !== undefined
+      const shouldRegenerate = columnsNeedingRefresh.has(column.id);
+      const value = !shouldRegenerate && existingValue !== undefined
         ? existingValue
         : generateCellValue(column, index, currentPoints.length);
       pointData.set(column.id, value);
@@ -223,6 +226,8 @@ function generateCustomColumnsData() {
 
     customColumnsData.set(point.id, pointData);
   });
+
+  columnsToRegenerate.clear();
 }
 
 // Obtiene el valor de una columna personalizada para un punto
@@ -239,6 +244,15 @@ export function getCurrentPoints() {
 
 export function getCustomColumnsDataMap() {
   return customColumnsData;
+}
+
+export function invalidateCustomColumnData(columnId) {
+  if (!columnId) {
+    columnsToRegenerate = new Set();
+    return;
+  }
+
+  columnsToRegenerate.add(columnId);
 }
 
 export function clearResults() {

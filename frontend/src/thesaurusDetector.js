@@ -25,7 +25,7 @@ export function initThesaurusDetector({ refreshTable }) {
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
   if (modal) {
     modal.addEventListener('click', (event) => {
-      if (event.target === modal) closeModal();
+      if (event.target === modal) return; // Evitar cierres involuntarios al pulsar fuera
     });
   }
 
