@@ -78,3 +78,8 @@
 ## Versión 1.5.1 - 2025-12-10
 - Corrige la visualización de campos tipo selector y columnas importadas desde CSV, mostrando sus valores en pantalla.
 - Pre-rellena el primer tramo de columnas numéricas y de moneda con los valores mínimo y máximo definidos, facilitando asignar el porcentaje inicial.
+
+## Versión 1.6.0 - 2025-12-10
+- Añade un selector de modo para elegir entre búsqueda por municipio o por mapa, mostrando solo los controles necesarios en cada caso y sincronizando el límite de puntos entre ambos flujos.
+- Duplica la altura del mapa y permite desplazarlo con el botón derecho mientras se dibujan polígonos, mejorando la navegación sin afectar al despliegue existente.
+- Dibuja en el mapa los puntos obtenidos en las búsquedas, ajustando automáticamente la vista cuando no se está editando un área.

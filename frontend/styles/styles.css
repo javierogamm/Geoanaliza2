@@ -62,6 +62,53 @@ h1 {
   box-shadow: var(--shadow);
 }
 
+.mode-panel h2 {
+  margin: 0 0 12px;
+}
+
+.mode-options {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.mode-option {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #0b1221;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.mode-option:hover,
+.mode-option:has(input:checked) {
+  border-color: var(--accent);
+  background: rgba(14, 165, 233, 0.07);
+}
+
+.mode-option input {
+  accent-color: var(--accent);
+  transform: scale(1.1);
+}
+
+.mode-option span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mode-option small {
+  color: var(--muted);
+}
+
+.is-hidden {
+  display: none;
+}
+
 .form {
   display: grid;
   gap: 12px;
@@ -86,10 +133,11 @@ h1 {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .area-map {
-  height: 320px;
+  height: 640px;
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
@@ -156,7 +204,7 @@ h1 {
 }
 
 .area-map {
-  height: 320px;
+  height: 640px;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -175,6 +223,10 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.compact-field {
+  min-width: 180px;
 }
 
 label {

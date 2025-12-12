@@ -20,15 +20,20 @@ const form = document.getElementById('search-form');
 const cityInput = document.getElementById('city');
 const neighbourhoodInput = document.getElementById('neighbourhood');
 const limitInput = document.getElementById('limit');
+const mapLimitInput = document.getElementById('map-limit');
 const exportButton = document.getElementById('export-btn');
 const areaMapContainer = document.getElementById('area-map');
 const drawAreaButton = document.getElementById('draw-area-btn');
 const resetAreaButton = document.getElementById('reset-area-btn');
 const searchAreaButton = document.getElementById('search-area-btn');
+const searchModeRadios = document.querySelectorAll('input[name="search-mode"]');
+const formPanel = document.querySelector('.form-panel');
+const mapPanel = document.querySelector('.area-panel');
 const areaStatus = document.getElementById('area-status');
 const areaCoordinatesContainer = document.getElementById('area-coordinates');
 const MAX_LIMIT = 1000;
 const BATCH_SIZE = 100;
+const DEFAULT_LIMIT = 20;
 
 // Variable para guardar los últimos puntos y poder re-renderizar
 let lastPointsData = null;
@@ -42,6 +47,8 @@ let selectionEnabled = false;
 let areaBounds = null;
 let polygonVertices = [];
 let vertexMarkers = [];
+let pointsLayerGroup = null;
+let searchMode = 'city';
 
 const formatBoundingBoxLabel = (bbox) =>
   `S:${bbox.south.toFixed(5)} W:${bbox.west.toFixed(5)} N:${bbox.north.toFixed(5)} E:${bbox.east.toFixed(5)}`;
@@ -55,9 +62,34 @@ const convertBoundsToBoundingBox = (bounds) => ({
 
 const parseLimit = (value) => {
   const parsed = parseInt(value, 10);
-  if (Number.isNaN(parsed) || parsed <= 0) return 20;
+  if (Number.isNaN(parsed) || parsed <= 0) return DEFAULT_LIMIT;
   if (parsed > MAX_LIMIT) return MAX_LIMIT;
   return parsed;
+};
+
+const syncLimitInputs = (value) => {
+  if (limitInput && limitInput.value !== value) {
+    limitInput.value = value;
+  }
+
+  if (mapLimitInput && mapLimitInput.value !== value) {
+    mapLimitInput.value = value;
+  }
+};
+
+const getActiveLimit = () => {
+  const valueFromInput = searchMode === 'map' && mapLimitInput ? mapLimitInput.value : limitInput?.value;
+  return parseLimit(valueFromInput || DEFAULT_LIMIT);
+};
+
+const togglePanelsByMode = () => {
+  if (formPanel) {
+    formPanel.classList.toggle('is-hidden', searchMode !== 'city');
+  }
+
+  if (mapPanel) {
+    mapPanel.classList.toggle('is-hidden', searchMode !== 'map');
+  }
 };
 
 const mergePointsById = (currentPoints, incomingPoints = []) => {
@@ -115,9 +147,7 @@ const fetchPointsInBatches = async ({ limit, requestFactory }) => {
     });
     renderPoints(collectedPoints);
 
-    if (typeof plotPointsOnMap === 'function') {
-      plotPointsOnMap(collectedPoints);
-    }
+    plotPointsOnMap(collectedPoints);
 
     if (collectedPoints.length >= targetForRender) {
       break;
@@ -283,12 +313,38 @@ initTranspose(getCurrentPoints, getCustomColumnsDataMap);
 // Inicializar el módulo de crear expedientes
 initCreateExpedients();
 
+if (limitInput) {
+  limitInput.addEventListener('input', (event) => syncLimitInputs(event.target.value));
+}
+
+if (mapLimitInput) {
+  mapLimitInput.addEventListener('input', (event) => syncLimitInputs(event.target.value));
+}
+
+if (searchModeRadios?.length) {
+  searchModeRadios.forEach((radio) => {
+    radio.addEventListener('change', (event) => {
+      if (!event.target.checked) return;
+      searchMode = event.target.value;
+      togglePanelsByMode();
+    });
+  });
+}
+
+togglePanelsByMode();
+syncLimitInputs(limitInput?.value || mapLimitInput?.value || DEFAULT_LIMIT);
+
 if (areaMapContainer) {
   initAreaMap();
 }
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
+
+  if (searchMode !== 'city') {
+    setStatus('Activa "Indicar población" para buscar por municipio o usa el mapa para dibujar el área.', true);
+    return;
+  }
 
   const city = cityInput.value.trim();
   if (!city) {
@@ -310,7 +366,7 @@ async function performSearch() {
 
   const city = cityInput.value.trim();
   const neighbourhood = neighbourhoodInput.value.trim();
-  const limit = parseLimit(limitInput.value);
+  const limit = getActiveLimit();
 
   if (!city) {
     setStatus('Introduce un municipio para buscar.', true);
@@ -333,9 +389,7 @@ async function performSearch() {
       boundingBox: data.boundingBox
     });
     renderPoints(data.points);
-    if (typeof plotPointsOnMap === 'function') {
-      plotPointsOnMap(data.points);
-    }
+    plotPointsOnMap(data.points);
   } catch (error) {
     setStatus(error.message || 'No se pudo obtener puntos', true, { loading: false });
   }
@@ -363,6 +417,10 @@ if (resetAreaButton) {
 
 if (searchAreaButton) {
   searchAreaButton.addEventListener('click', () => {
+    if (searchMode !== 'map') {
+      setStatus('Selecciona "Con mapa" para buscar dibujando un área.', true);
+      return;
+    }
     performAreaSearch();
   });
 }
@@ -382,6 +440,49 @@ function clearAreaSelection() {
   renderAreaCoordinates([]);
 }
 
+function plotPointsOnMap(points = []) {
+  if (!mapInstance || !pointsLayerGroup) return;
+
+  pointsLayerGroup.clearLayers();
+
+  const validPoints = (points || []).filter((point) =>
+    typeof point?.lat === 'number' && typeof point?.lng === 'number'
+  );
+
+  validPoints.forEach((point) => {
+    const marker = L.circleMarker([point.lat, point.lng], {
+      radius: 6,
+      color: '#22d3ee',
+      weight: 2,
+      fillColor: '#22d3ee',
+      fillOpacity: 0.65
+    });
+
+    const label = [point.name || 'Punto sin nombre', point.street].filter(Boolean).join(' · ');
+    marker.bindPopup(label || 'Punto obtenido');
+    marker.addTo(pointsLayerGroup);
+  });
+
+  if (!selectionEnabled) {
+    const bounds = pointsLayerGroup.getBounds();
+    if (bounds?.isValid()) {
+      mapInstance.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
+    }
+  }
+}
+
+function enableRightClickScroll() {
+  if (!areaMapContainer || !mapInstance?.dragging?._draggable) return;
+
+  areaMapContainer.addEventListener('contextmenu', (event) => event.preventDefault());
+
+  areaMapContainer.addEventListener('mousedown', (event) => {
+    if (event.button !== 2) return;
+    event.preventDefault();
+    mapInstance.dragging._draggable._onDown(event);
+  });
+}
+
 function initAreaMap() {
   if (!window.L || !areaMapContainer) {
     setAreaStatus('El mapa no pudo cargarse.');
@@ -398,11 +499,15 @@ function initAreaMap() {
     attribution: 'Datos geográficos © OpenStreetMap contributors'
   }).addTo(mapInstance);
 
+  pointsLayerGroup = L.layerGroup().addTo(mapInstance);
+
   mapInstance.on('click', handleMapClick);
   mapInstance.on('mousemove', (event) => {
     if (!selectionEnabled || !polygonVertices.length) return;
     updatePreviewPath(event.latlng);
   });
+
+  enableRightClickScroll();
 
   setAreaStatus('Pulsa "Dibujar área" y ve marcando los vértices sobre el mapa.');
   renderAreaCoordinates([]);
@@ -551,7 +656,7 @@ async function performAreaSearch() {
     return;
   }
 
-  const limit = parseLimit(limitInput.value);
+  const limit = getActiveLimit();
   const bbox = [
     areaBounds.getSouth(),
     areaBounds.getWest(),
