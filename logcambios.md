@@ -110,3 +110,16 @@
 ## Versión 1.7.5 - 2025-12-12
 - Se restaura la visibilidad del botón de transposición de datos en la interfaz principal para poder acceder a la función sin
   pasos adicionales tras importar.
+
+## Versión 1.8.0 - 2025-12-13
+- Añade un panel de tesauros configurados con edición y eliminación de columnas personalizadas desde la interfaz, mostrando
+  su tipo y referencia.
+- Permite reabrir y editar columnas existentes reutilizando el modal de tesauros, rellenando automáticamente los tramos y
+  opciones anteriores.
+- Refuerza los modales de tesauros para evitar cierres accidentales al hacer clic fuera del contenido.
+
+## Versión 1.8.1 - 2025-12-13
+- Cada columna muestra su propia acción de edición: las bases se ajustan desde su chip y las personalizadas mantienen edición
+  y borrado individuales.
+- Se elimina el botón global de columnas base y se mejora la visibilidad de la configuración con estilos diferenciados.
+- La cola de tesauros detectados vuelve a procesarse secuencialmente para abrir todas las configuraciones pendientes.

@@ -29,7 +29,7 @@ export function initBaseColumnsModal(onConfigured) {
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
+    if (e.target === modal) return; // Evitar cierres accidentales al pulsar fuera
   });
 
   // Submit del formulario

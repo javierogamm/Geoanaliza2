@@ -1,10 +1,12 @@
-import { addCustomColumn } from './columnManager.js';
+import { addCustomColumn, updateCustomColumn } from './columnManager.js';
 
 const modal = document.getElementById('column-modal');
 const openBtn = document.getElementById('add-column-btn');
 const closeBtn = document.getElementById('close-modal');
 const cancelBtn = document.getElementById('cancel-modal');
 const form = document.getElementById('column-form');
+const modalTitle = modal.querySelector('.modal-header h3');
+const submitBtn = form.querySelector('.modal-actions button[type="submit"]');
 const typeSelect = document.getElementById('column-type');
 const rowsField = document.getElementById('rows-field');
 const numRowsInput = document.getElementById('num-rows');
@@ -21,15 +23,16 @@ const configSections = {
   date: document.getElementById('config-date')
 };
 
-// Callback que se ejecuta cuando se añade una columna
-let onColumnAddedCallback = null;
+// Callback que se ejecuta cuando se añade o edita una columna
+let onColumnSavedCallback = null;
 // Función para verificar si hay datos cargados
 let hasDataCallback = null;
 let pendingPrefill = null;
 let detectedExtraProvider = null;
+let editingColumnId = null;
 
-export function initColumnModal(onColumnAdded, hasData) {
-  onColumnAddedCallback = onColumnAdded;
+export function initColumnModal({ onSaved, hasData }) {
+  onColumnSavedCallback = onSaved;
   hasDataCallback = hasData;
 
   // Abrir modal
@@ -38,8 +41,9 @@ export function initColumnModal(onColumnAdded, hasData) {
   // Cerrar modal
   closeBtn.addEventListener('click', closeModal);
   cancelBtn.addEventListener('click', closeModal);
+  // Evitar cierres accidentales por clic fuera del contenido
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
+    if (e.target === modal) return;
   });
 
   // Cambio de tipo de columna
@@ -67,21 +71,22 @@ export function initColumnModal(onColumnAdded, hasData) {
 }
 
 function openModal() {
-  modal.classList.add('active');
   resetForm();
 
+  const isEditing = Boolean(editingColumnId || pendingPrefill?.id);
+  editingColumnId = pendingPrefill?.id ?? null;
+  modalTitle.textContent = isEditing ? 'Editar tesauro' : 'Añadir columna personalizada';
+  submitBtn.textContent = isEditing ? 'Guardar cambios' : 'Añadir columna';
+
   if (pendingPrefill) {
-    document.getElementById('column-name').value = pendingPrefill.name;
-    document.getElementById('column-reference').value = pendingPrefill.reference;
-    if (pendingPrefill.type) {
-      document.getElementById('column-type').value = pendingPrefill.type;
-      handleTypeChange({ target: { value: pendingPrefill.type } });
-    }
+    applyPrefill(pendingPrefill);
     pendingPrefill = null;
   }
 
+  modal.classList.add('active');
+
   // Mostrar campo de número de filas solo si no hay datos
-  if (hasDataCallback && !hasDataCallback()) {
+  if (!editingColumnId && hasDataCallback && !hasDataCallback()) {
     rowsField.style.display = 'block';
     numRowsInput.required = true;
   } else {
@@ -93,6 +98,7 @@ function openModal() {
 function closeModal({ reason = 'cancel' } = {}) {
   modal.classList.remove('active');
   resetForm();
+  editingColumnId = null;
   document.dispatchEvent(
     new CustomEvent('column-modal-closed', {
       detail: { reason }
@@ -105,8 +111,15 @@ export function openColumnModalWithPrefill(prefill) {
   openModal();
 }
 
+export function openColumnModalForEdit(prefill) {
+  pendingPrefill = prefill;
+  editingColumnId = prefill?.id ?? null;
+  openModal();
+}
+
 function handleOpenRequest() {
   pendingPrefill = null;
+  editingColumnId = null;
 
   if (detectedExtraProvider) {
     const candidate = detectedExtraProvider();
@@ -166,6 +179,17 @@ function hideAllConfigSections() {
   });
 }
 
+function applyPrefill(prefill) {
+  document.getElementById('column-name').value = prefill.name ?? '';
+  document.getElementById('column-reference').value = prefill.reference ?? '';
+
+  if (prefill.type) {
+    document.getElementById('column-type').value = prefill.type;
+    handleTypeChange({ target: { value: prefill.type } });
+    populateConfig(prefill.type, prefill.config);
+  }
+}
+
 function handleTypeChange(e) {
   hideAllConfigSections();
   const type = e.target.value;
@@ -192,7 +216,28 @@ function handleTypeChange(e) {
   }
 }
 
-function addSelectorOption() {
+function populateConfig(type, config) {
+  if (!config) return;
+
+  switch (type) {
+    case 'selector':
+      populateSelectorConfig(config);
+      break;
+    case 'number':
+      populateNumericConfig(config, 'number');
+      break;
+    case 'currency':
+      populateNumericConfig(config, 'currency');
+      break;
+    case 'date':
+      populateDateConfig(config);
+      break;
+    default:
+      break;
+  }
+}
+
+function addSelectorOption(defaults = {}) {
   const container = document.getElementById('selector-options');
   const optionIndex = container.children.length;
 
@@ -206,6 +251,40 @@ function addSelectorOption() {
   `;
 
   container.appendChild(optionDiv);
+  optionDiv.querySelector('.option-reference').value = defaults.reference ?? '';
+  optionDiv.querySelector('.option-value').value = defaults.value ?? '';
+  optionDiv.querySelector('.option-percentage').value =
+    defaults.percentage !== undefined && defaults.percentage !== null ? defaults.percentage : '';
+}
+
+function populateSelectorConfig(config) {
+  const container = document.getElementById('selector-options');
+  container.innerHTML = '';
+
+  if (Array.isArray(config.options) && config.options.length > 0) {
+    config.options.forEach((option) => addSelectorOption(option));
+    return;
+  }
+
+  addSelectorOption();
+  addSelectorOption();
+}
+
+function populateNumericConfig(config, prefix) {
+  document.getElementById(`${prefix}-min`).value = config.min ?? '';
+  document.getElementById(`${prefix}-max`).value = config.max ?? '';
+  document.getElementById(`${prefix}-decimals`).value = config.decimals ?? '2';
+
+  const container = prefix === 'number' ? numberRangesContainer : currencyRangesContainer;
+  populateRanges(container, config.ranges);
+  if (!config.ranges || config.ranges.length === 0) {
+    ensureInitialRangeRow(container, `${prefix}-min`, `${prefix}-max`);
+  }
+}
+
+function populateDateConfig(config) {
+  if (config.min) document.getElementById('date-min').value = config.min;
+  if (config.max) document.getElementById('date-max').value = config.max;
 }
 
 function handleFormSubmit(e) {
@@ -226,9 +305,9 @@ function handleFormSubmit(e) {
     return;
   }
 
-  // Obtener número de filas si no hay datos
+  // Obtener número de filas si no hay datos y se está creando
   let numRows = null;
-  if (hasDataCallback && !hasDataCallback()) {
+  if (!editingColumnId && hasDataCallback && !hasDataCallback()) {
     numRows = parseInt(numRowsInput.value, 10);
     if (isNaN(numRows) || numRows < 1) {
       alert('Por favor, especifica un número válido de filas (mínimo 1)');
@@ -236,24 +315,38 @@ function handleFormSubmit(e) {
     }
   }
 
-  // Añadir la columna
-  addCustomColumn({
+  const columnPayload = {
     name: columnName,
     reference: columnReference,
     type: columnType,
     config: config
-  });
+  };
+
+  let savedColumn = null;
+  let action = 'create';
+
+  if (editingColumnId) {
+    savedColumn = updateCustomColumn(editingColumnId, columnPayload);
+    action = 'edit';
+  } else {
+    savedColumn = addCustomColumn(columnPayload);
+  }
+
+  if (!savedColumn) {
+    alert('No se pudo guardar el tesauro. Inténtalo de nuevo.');
+    return;
+  }
 
   closeModal({ reason: 'submit' });
 
-  // Ejecutar callback con el número de filas
-  if (onColumnAddedCallback) {
-    onColumnAddedCallback(numRows);
+  if (onColumnSavedCallback) {
+    onColumnSavedCallback({ numRows, action, columnId: savedColumn.id });
   }
 
   document.dispatchEvent(
-    new CustomEvent('column-added', {
+    new CustomEvent(action === 'create' ? 'column-added' : 'column-updated', {
       detail: {
+        id: savedColumn.id,
         name: columnName,
         reference: columnReference,
         type: columnType
@@ -418,6 +511,16 @@ function addRangeRow(container, defaults = {}) {
   row.querySelector('.range-max').value = defaults.max ?? '';
   row.querySelector('.range-percentage').value = defaults.percentage ?? '';
   container.appendChild(row);
+}
+
+function populateRanges(container, ranges = []) {
+  container.innerHTML = '';
+
+  if (ranges.length === 0) {
+    return;
+  }
+
+  ranges.forEach((range) => addRangeRow(container, range));
 }
 
 function getDefaultRangeValues(container, minFieldId, maxFieldId) {

@@ -1,5 +1,6 @@
 // Gestión de columnas personalizadas
 let customColumns = [];
+let updatedColumns = new Set();
 
 /**
  * Tipos de columnas soportados:
@@ -28,6 +29,24 @@ export function addCustomColumn(columnConfig) {
   return column;
 }
 
+export function updateCustomColumn(columnId, updates) {
+  const index = customColumns.findIndex((column) => column.id === columnId);
+  if (index === -1) return null;
+
+  const current = customColumns[index];
+  const updated = {
+    ...current,
+    name: updates.name ?? current.name,
+    reference: updates.reference ?? current.reference,
+    type: updates.type ?? current.type,
+    config: updates.config ?? current.config
+  };
+
+  customColumns[index] = updated;
+  updatedColumns.add(columnId);
+  return updated;
+}
+
 // Eliminar una columna personalizada
 export function removeCustomColumn(columnId) {
   customColumns = customColumns.filter(col => col.id !== columnId);
@@ -36,6 +55,15 @@ export function removeCustomColumn(columnId) {
 // Limpiar todas las columnas personalizadas
 export function clearCustomColumns() {
   customColumns = [];
+  updatedColumns.clear();
+}
+
+export function getUpdatedColumns() {
+  return new Set(updatedColumns);
+}
+
+export function clearUpdatedColumns() {
+  updatedColumns.clear();
 }
 
 // Genera un valor aleatorio para una celda según el tipo de columna

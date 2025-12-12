@@ -363,6 +363,135 @@ input:focus {
   flex-wrap: wrap;
 }
 
+.thesaurus-board {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #0b1221;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.thesaurus-board__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.thesaurus-board__header h3 {
+  margin: 0 0 4px;
+}
+
+.thesaurus-board__content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.thesaurus-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.thesaurus-section h4 {
+  margin: 0;
+}
+
+.thesaurus-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.thesaurus-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.thesaurus-tag {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  padding: 8px 10px;
+  border-radius: 10px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.thesaurus-tag__reference {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.thesaurus-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.thesaurus-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.thesaurus-chip--base {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.thesaurus-chip__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.thesaurus-chip__name {
+  font-weight: 700;
+}
+
+.thesaurus-chip__meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.thesaurus-chip__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.chip-action {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.chip-action:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .btn-add {
   display: flex;
   align-items: center;

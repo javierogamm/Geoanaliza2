@@ -25,7 +25,7 @@ export function initThesaurusDetector({ refreshTable }) {
   if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
   if (modal) {
     modal.addEventListener('click', (event) => {
-      if (event.target === modal) closeModal();
+      if (event.target === modal) return; // Evitar cierres involuntarios al pulsar fuera
     });
   }
 
@@ -258,7 +258,7 @@ function openNextCustomColumn() {
 }
 
 function handleColumnAddedFromQueue() {
-  if (!isUsingDetectedPrefill || pendingThesaurusExtras.length === 0) return;
+  if (pendingThesaurusExtras.length === 0) return;
   pendingThesaurusExtras.shift();
   isUsingDetectedPrefill = false;
   setTimeout(openNextCustomColumn, 120);
