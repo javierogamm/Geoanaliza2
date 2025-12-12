@@ -18,7 +18,7 @@ import {
 } from './baseColumnsModal.js';
 import { initImportExcel, getExpedientesData, hasExpedientes } from './importExcel.js';
 import { initImportCsv } from './importCsv.js';
-import { initTranspose, showTransposeButton, hideTransposeButton } from './transposeData.js';
+import { initTranspose, showTransposeButton } from './transposeData.js';
 import { addCustomColumn, getCustomColumns, removeCustomColumn } from './columnManager.js';
 import { initCreateExpedients } from './createExpedients.js';
 import { initThesaurusDetector, getPendingThesaurusExtra } from './thesaurusDetector.js';
@@ -41,6 +41,8 @@ const areaCoordinatesContainer = document.getElementById('area-coordinates');
 const baseThesaurusList = document.getElementById('base-thesaurus-list');
 const customColumnsList = document.getElementById('custom-columns-list');
 const customThesaurusFeedback = document.getElementById('custom-thesaurus-feedback');
+const stepPanels = document.querySelectorAll('.step-panel');
+const stepSkipButtons = document.querySelectorAll('.step-skip-btn');
 const MAX_LIMIT = 1000;
 const BATCH_SIZE = 100;
 const DEFAULT_LIMIT = 20;
@@ -59,6 +61,7 @@ let polygonVertices = [];
 let vertexMarkers = [];
 let pointsLayerGroup = null;
 let searchMode = 'city';
+const orderedStepPanels = Array.from(stepPanels);
 
 const formatBoundingBoxLabel = (bbox) =>
   `S:${bbox.south.toFixed(5)} W:${bbox.west.toFixed(5)} N:${bbox.north.toFixed(5)} E:${bbox.east.toFixed(5)}`;
@@ -99,6 +102,26 @@ const togglePanelsByMode = () => {
 
   if (mapPanel) {
     mapPanel.classList.toggle('is-hidden', searchMode !== 'map');
+  }
+};
+
+const markStepAsSkipped = (panel) => {
+  if (!panel) return;
+  panel.classList.add('is-skipped');
+  const feedback = panel.querySelector('.step-feedback');
+  if (feedback) {
+    feedback.textContent = 'Fase saltada. Puedes retomarla cuando lo necesites.';
+    feedback.classList.add('step-feedback--skipped');
+  }
+};
+
+const markStepAsDone = (panel, message) => {
+  if (!panel) return;
+  panel.classList.remove('is-skipped');
+  const feedback = panel.querySelector('.step-feedback');
+  if (feedback && message) {
+    feedback.textContent = message;
+    feedback.classList.remove('step-feedback--skipped');
   }
 };
 
@@ -342,13 +365,16 @@ function generatePointsFromExpedientes(expedientes) {
 
   // En caso contrario, generar filas ficticias para mostrar los expedientes
   mockPoints = [];
+  const offsetStep = 0.0025;
   for (let i = 0; i < values.length; i++) {
+    const latOffset = (i % 10) * offsetStep;
+    const lngOffset = Math.floor(i / 10) * offsetStep;
     mockPoints.push({
       id: `expediente_${i}`,
       name: `Expediente ${i + 1}`,
       street: '',
-      lat: 0,
-      lng: 0,
+      lat: latOffset,
+      lng: lngOffset,
       source: 'expediente',
       expedienteValue: values[i]
     });
@@ -391,6 +417,18 @@ initImportExcel((expedientes) => {
   // Cuando se importan expedientes, generar puntos y renderizar
   const pointsToRender = generatePointsFromExpedientes(expedientes);
   renderPoints(pointsToRender);
+  plotPointsOnMap(pointsToRender);
+  if (searchModeRadios?.length) {
+    searchModeRadios.forEach((radio) => {
+      radio.checked = radio.value === 'map';
+    });
+    searchMode = 'map';
+    togglePanelsByMode();
+  }
+  markStepAsDone(
+    orderedStepPanels[0],
+    'Expedientes importados. Se generan filas ficticias y se representan en el mapa.'
+  );
   // Mostrar botón de transponer
   showTransposeButton();
 });
@@ -474,12 +512,26 @@ if (baseThesaurusList) {
   });
 }
 
+if (stepSkipButtons?.length) {
+  stepSkipButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      markStepAsSkipped(button.closest('.step-panel'));
+    });
+  });
+}
+
 if (searchModeRadios?.length) {
   searchModeRadios.forEach((radio) => {
     radio.addEventListener('change', (event) => {
       if (!event.target.checked) return;
       searchMode = event.target.value;
       togglePanelsByMode();
+      markStepAsDone(
+        orderedStepPanels[1],
+        searchMode === 'map'
+          ? 'Has elegido dibujar en mapa. Añade vértices y consulta los puntos.'
+          : 'Has elegido buscar por ciudad. Completa los campos y lanza la búsqueda.'
+      );
     });
   });
 }
@@ -543,6 +595,10 @@ async function performSearch() {
     });
     renderPoints(data.points);
     plotPointsOnMap(data.points);
+    markStepAsDone(
+      orderedStepPanels[2],
+      'Puntos obtenidos. Los resultados están listos para enriquecer o transponer.'
+    );
   } catch (error) {
     setStatus(error.message || 'No se pudo obtener puntos', true, { loading: false });
   }
@@ -837,11 +893,16 @@ async function performAreaSearch() {
       boundingBox: data.boundingBox
     });
     renderPoints(data.points);
+    plotPointsOnMap(data.points);
     if (data.boundingBox) {
       showBoundingBoxStatus(data.boundingBox, 'Resultados cargados en el área');
     } else {
       setAreaStatus('Resultados cargados. Puedes volver a dibujar para refinar.');
     }
+    markStepAsDone(
+      orderedStepPanels[2],
+      'Área consultada. Los puntos obtenidos se han dibujado en el mapa.'
+    );
   } catch (error) {
     setStatus(error.message || 'No se pudo obtener puntos', true, { loading: false });
     setAreaStatus('No se pudo obtener puntos para el área seleccionada.', true);

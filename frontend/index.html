@@ -25,6 +25,35 @@
         </div>
       </header>
 
+      <section class="panel step-panel">
+        <div class="step-header">
+          <div>
+            <p class="step-badge">Paso 1</p>
+            <h2>Importar expedientes</h2>
+            <p class="meta">Carga un Excel o salta este paso si ya tienes los expedientes preparados.</p>
+          </div>
+          <div class="step-actions">
+            <button id="import-excel-btn" type="button" class="btn btn-import">📊 Importar Expedientes</button>
+            <button type="button" class="btn-secondary step-skip-btn">Saltar fase</button>
+          </div>
+        </div>
+        <p class="step-feedback">Al importar los expedientes se generarán filas ficticias y se mostrarán también en el mapa.</p>
+      </section>
+
+      <section class="panel step-panel">
+        <div class="step-header">
+          <div>
+            <p class="step-badge">Paso 2</p>
+            <h2>Crear puntos en el mapa</h2>
+            <p class="meta">Elige si quieres indicar una ciudad o dibujar un área, o salta esta fase y continúa.</p>
+          </div>
+          <div class="step-actions">
+            <button type="button" class="btn-secondary step-skip-btn">Saltar fase</button>
+          </div>
+        </div>
+        <p class="step-feedback">Cuando cambies de modo aparecerán las cajas de búsqueda o el mapa para dibujar.</p>
+      </section>
+
       <section class="panel mode-panel">
         <h2>¿Cómo quieres pedir los puntos?</h2>
         <div class="mode-options">
@@ -43,6 +72,20 @@
             </span>
           </label>
         </div>
+      </section>
+
+      <section class="panel step-panel">
+        <div class="step-header">
+          <div>
+            <p class="step-badge">Paso 3</p>
+            <h2>Completar datos o dibujar</h2>
+            <p class="meta">Cuando elijas el modo, rellena las cajas o dibuja el polígono en el mapa, o salta esta fase.</p>
+          </div>
+          <div class="step-actions">
+            <button type="button" class="btn-secondary step-skip-btn">Saltar fase</button>
+          </div>
+        </div>
+        <p class="step-feedback">Define municipio y límites o traza el área para ver los puntos sobre el mapa.</p>
       </section>
 
       <section class="panel form-panel">
@@ -85,22 +128,43 @@
         <div id="area-coordinates" class="area-coordinates"></div>
       </section>
 
+      <section class="panel step-panel">
+        <div class="step-header">
+          <div>
+            <p class="step-badge">Paso 4</p>
+            <h2>Importar tesauros con copia y pega</h2>
+            <p class="meta">Valida los nombres y referencias pegando el listado, o salta si ya tienes la configuración.</p>
+          </div>
+          <div class="step-actions">
+            <button id="thesaurus-detector-btn" type="button" class="btn btn-import">🧭 Detectar tesauros</button>
+            <button type="button" class="btn-secondary step-skip-btn">Saltar fase</button>
+          </div>
+        </div>
+        <p class="step-feedback">Puedes volver a abrir el detector en cualquier momento para revisar o completar tesauros.</p>
+      </section>
+
+      <section class="panel step-panel">
+        <div class="step-header">
+          <div>
+            <p class="step-badge">Paso 5</p>
+            <h2>Transponer datos</h2>
+            <p class="meta">Transpón la tabla cuando hayas importado expedientes y tesauros, o salta esta fase.</p>
+          </div>
+          <div class="step-actions">
+            <button id="transpose-btn" type="button" class="btn btn-transpose">🔄 Transponer datos</button>
+            <button type="button" class="btn-secondary step-skip-btn">Saltar fase</button>
+          </div>
+        </div>
+        <p class="step-feedback">Elige los campos a incluir y exporta a CSV con los mismos valores que ves en pantalla.</p>
+      </section>
+
       <section class="panel results">
         <div class="results-header">
           <h2>Resultados</h2>
           <div class="results-actions">
             <p class="meta" id="results-meta"></p>
-            <button id="import-excel-btn" type="button" class="btn btn-import">
-              📊 Importar Expedientes
-            </button>
             <button id="import-csv-btn" type="button" class="btn btn-import">
               📄 Importar CSV
-            </button>
-            <button id="transpose-btn" type="button" class="btn btn-transpose">
-              🔄 Transponer datos
-            </button>
-            <button id="thesaurus-detector-btn" type="button" class="btn btn-import">
-              🧭 Detectar tesauros
             </button>
             <button id="create-expedients-btn" type="button" class="btn btn-primary">
               ✨ Crear Expedientes

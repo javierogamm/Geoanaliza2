@@ -141,3 +141,11 @@
 ## Versión 1.8.5 - 2025-12-14
 - La exportación CSV de la transposición fuerza las coordenadas a texto para que Excel mantenga los puntos decimales exactos
   que se muestran en la aplicación sin reinterpretarlos como millones u otros formatos numéricos.
+
+## Versión 1.9.0 - 2025-12-15
+- Reordena la interfaz en fases claras (importar expedientes, crear puntos, tesauros y transposición) con botones para
+  saltar cada etapa sin perder flujo.
+- Los expedientes importados generan puntos ficticios con coordenadas visibles y se pintan en el mapa automáticamente,
+  cambiando al modo de mapa para seguir trabajando con ellos.
+- Las búsquedas por ciudad o área marcan el paso como completado y pintan los resultados en el mapa manteniendo el resto de
+  acciones (CSV, columnas y creación de expedientes) disponibles debajo.
