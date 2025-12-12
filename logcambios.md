@@ -117,3 +117,9 @@
 - Permite reabrir y editar columnas existentes reutilizando el modal de tesauros, rellenando automáticamente los tramos y
   opciones anteriores.
 - Refuerza los modales de tesauros para evitar cierres accidentales al hacer clic fuera del contenido.
+
+## Versión 1.8.1 - 2025-12-13
+- Cada columna muestra su propia acción de edición: las bases se ajustan desde su chip y las personalizadas mantienen edición
+  y borrado individuales.
+- Se elimina el botón global de columnas base y se mejora la visibilidad de la configuración con estilos diferenciados.
+- La cola de tesauros detectados vuelve a procesarse secuencialmente para abrir todas las configuraciones pendientes.

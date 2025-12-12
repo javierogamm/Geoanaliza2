@@ -452,6 +452,11 @@ input:focus {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.thesaurus-chip--base {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
 .thesaurus-chip__info {
   display: flex;
   flex-direction: column;

@@ -10,7 +10,12 @@ import {
   invalidateCustomColumnData
 } from './ui.js';
 import { initColumnModal, openColumnModalForEdit, registerDetectedExtraProvider } from './columnModal.js';
-import { initBaseColumnsModal, openBaseColumnsModal, hasBaseColumnsConfig } from './baseColumnsModal.js';
+import {
+  initBaseColumnsModal,
+  openBaseColumnsModal,
+  hasBaseColumnsConfig,
+  getBaseColumnsConfig
+} from './baseColumnsModal.js';
 import { initImportExcel, getExpedientesData, hasExpedientes } from './importExcel.js';
 import { initImportCsv } from './importCsv.js';
 import { initTranspose, showTransposeButton, hideTransposeButton } from './transposeData.js';
@@ -36,7 +41,6 @@ const areaCoordinatesContainer = document.getElementById('area-coordinates');
 const baseThesaurusList = document.getElementById('base-thesaurus-list');
 const customColumnsList = document.getElementById('custom-columns-list');
 const customThesaurusFeedback = document.getElementById('custom-thesaurus-feedback');
-const editBaseThesaurusBtn = document.getElementById('edit-base-thesaurus-btn');
 const MAX_LIMIT = 1000;
 const BATCH_SIZE = 100;
 const DEFAULT_LIMIT = 20;
@@ -202,14 +206,19 @@ function renderBaseThesaurusSection() {
   const config = getBaseColumnsConfig();
   const entries = [config?.street || defaults.street, config?.lat || defaults.lat, config?.lng || defaults.lng];
 
-  entries.forEach((entry) => {
-    const tag = document.createElement('div');
-    tag.className = 'thesaurus-tag';
-    tag.innerHTML = `
-      <span>${entry.name}</span>
-      <span class="thesaurus-tag__reference">${entry.reference}</span>
+  entries.forEach((entry, index) => {
+    const chip = document.createElement('div');
+    chip.className = 'thesaurus-chip thesaurus-chip--base';
+    chip.innerHTML = `
+      <div class="thesaurus-chip__info">
+        <span class="thesaurus-chip__name">${entry.name}</span>
+        <span class="thesaurus-chip__meta">${entry.reference} · Columna base ${index + 1}</span>
+      </div>
+      <div class="thesaurus-chip__actions">
+        <button class="chip-action" data-action="edit-base" data-field="${entry.reference}">Editar</button>
+      </div>
     `;
-    baseThesaurusList.appendChild(tag);
+    baseThesaurusList.appendChild(chip);
   });
 }
 
@@ -241,7 +250,7 @@ function renderCustomThesaurusSection() {
     return;
   }
 
-  customThesaurusFeedback.textContent = 'Pulsa editar para ajustar o eliminar para quitar la columna.';
+  customThesaurusFeedback.textContent = 'Cada columna tiene acciones rápidas para editar o eliminar.';
 
   columns.forEach((column) => {
     const chip = document.createElement('div');
@@ -456,9 +465,12 @@ if (customColumnsList) {
   });
 }
 
-if (editBaseThesaurusBtn) {
-  editBaseThesaurusBtn.addEventListener('click', () => {
-    openBaseColumnsModal(getBaseColumnsConfig());
+if (baseThesaurusList) {
+  baseThesaurusList.addEventListener('click', (event) => {
+    const action = event.target?.dataset?.action;
+    if (action === 'edit-base') {
+      openBaseColumnsModal(getBaseColumnsConfig());
+    }
   });
 }
 

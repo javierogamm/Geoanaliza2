@@ -258,7 +258,7 @@ function openNextCustomColumn() {
 }
 
 function handleColumnAddedFromQueue() {
-  if (!isUsingDetectedPrefill || pendingThesaurusExtras.length === 0) return;
+  if (pendingThesaurusExtras.length === 0) return;
   pendingThesaurusExtras.shift();
   isUsingDetectedPrefill = false;
   setTimeout(openNextCustomColumn, 120);
