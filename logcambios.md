@@ -137,3 +137,7 @@
   generan en pantalla.
 - Simula la exportación con datos de ejemplo para comprobar que las filas exportadas conservan valores críticos como
   dirección, latitud y longitud sin alteraciones.
+
+## Versión 1.8.5 - 2025-12-14
+- La exportación CSV de la transposición fuerza las coordenadas a texto para que Excel mantenga los puntos decimales exactos
+  que se muestran en la aplicación sin reinterpretarlos como millones u otros formatos numéricos.
