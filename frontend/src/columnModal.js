@@ -54,10 +54,10 @@ export function initColumnModal({ onSaved, hasData }) {
 
   // Añadir tramos porcentuales
   addNumberRangeBtn.addEventListener('click', () =>
-    addRangeRow(numberRangesContainer, getDefaultRangeValues(numberRangesContainer, 'number-min', 'number-max'))
+    handleAddRange(numberRangesContainer, 'number-min', 'number-max')
   );
   addCurrencyRangeBtn.addEventListener('click', () =>
-    addRangeRow(currencyRangesContainer, getDefaultRangeValues(currencyRangesContainer, 'currency-min', 'currency-max'))
+    handleAddRange(currencyRangesContainer, 'currency-min', 'currency-max')
   );
 
   // Submit del formulario
@@ -169,6 +169,8 @@ function resetForm() {
   document.getElementById('selector-options').innerHTML = '';
   numberRangesContainer.innerHTML = '';
   currencyRangesContainer.innerHTML = '';
+  delete numberRangesContainer.dataset.rangeMode;
+  delete currencyRangesContainer.dataset.rangeMode;
   document.getElementById('number-decimals').value = '2';
   document.getElementById('currency-decimals').value = '2';
 }
@@ -276,7 +278,10 @@ function populateNumericConfig(config, prefix) {
   document.getElementById(`${prefix}-decimals`).value = config.decimals ?? '2';
 
   const container = prefix === 'number' ? numberRangesContainer : currencyRangesContainer;
-  populateRanges(container, config.ranges);
+  populateRanges(container, config.ranges, {
+    minFieldId: `${prefix}-min`,
+    maxFieldId: `${prefix}-max`
+  });
   if (!config.ranges || config.ranges.length === 0) {
     ensureInitialRangeRow(container, `${prefix}-min`, `${prefix}-max`);
   }
@@ -487,7 +492,7 @@ function parseDecimals(inputId, fallback) {
   return Math.min(parsed, 10);
 }
 
-function addRangeRow(container, defaults = {}) {
+function addRangeRow(container, defaults = {}, { showPercentage = true, onRemove } = {}) {
   const row = document.createElement('div');
   row.className = 'range-row field-group';
   row.innerHTML = `
@@ -499,28 +504,38 @@ function addRangeRow(container, defaults = {}) {
       <label>Tramo máximo</label>
       <input type="number" step="any" class="range-max" placeholder="10" />
     </div>
-    <div class="field">
+    <div class="field range-percentage-field">
       <label>% del total</label>
       <input type="number" min="0" max="100" step="1" class="range-percentage" placeholder="50" />
     </div>
     <button type="button" class="btn-remove" aria-label="Eliminar tramo">✕</button>
   `;
 
-  row.querySelector('.btn-remove').addEventListener('click', () => row.remove());
+  row.querySelector('.btn-remove').addEventListener('click', () => {
+    row.remove();
+    if (onRemove) {
+      onRemove();
+    }
+  });
   row.querySelector('.range-min').value = defaults.min ?? '';
   row.querySelector('.range-max').value = defaults.max ?? '';
   row.querySelector('.range-percentage').value = defaults.percentage ?? '';
+  toggleRangePercentage(row, showPercentage);
   container.appendChild(row);
 }
 
-function populateRanges(container, ranges = []) {
+function populateRanges(container, ranges = [], { minFieldId, maxFieldId } = {}) {
   container.innerHTML = '';
 
   if (ranges.length === 0) {
+    container.dataset.rangeMode = 'single';
     return;
   }
 
-  ranges.forEach((range) => addRangeRow(container, range));
+  container.dataset.rangeMode = 'enabled';
+  ranges.forEach((range) =>
+    addRangeRow(container, range, { onRemove: () => syncRangeMode(container, minFieldId, maxFieldId) })
+  );
 }
 
 function getDefaultRangeValues(container, minFieldId, maxFieldId) {
@@ -541,10 +556,11 @@ function getDefaultRangeValues(container, minFieldId, maxFieldId) {
 
 function extractRanges(container, label) {
   const rows = container.querySelectorAll('.range-row');
-  if (rows.length === 0) return [];
+  if (rows.length === 0 || container.dataset.rangeMode !== 'enabled') return [];
 
   const ranges = [];
   let totalPercentage = 0;
+  let hasInvalidRows = false;
 
   rows.forEach((row) => {
     const minValue = parseFloat(row.querySelector('.range-min').value);
@@ -552,16 +568,23 @@ function extractRanges(container, label) {
     const percentage = parseFloat(row.querySelector('.range-percentage').value);
 
     if ([minValue, maxValue, percentage].some((v) => Number.isNaN(v))) {
+      hasInvalidRows = true;
       return;
     }
 
     if (minValue >= maxValue) {
+      hasInvalidRows = true;
       return;
     }
 
     ranges.push({ min: minValue, max: maxValue, percentage });
     totalPercentage += percentage;
   });
+
+  if (hasInvalidRows) {
+    alert(`Debes completar todos los tramos ${label} con valores y porcentajes válidos o eliminarlos.`);
+    return null;
+  }
 
   if (ranges.length === 0) {
     alert(`Debes añadir tramos de ${label} válidos o eliminar los existentes para continuar.`);
@@ -578,7 +601,67 @@ function extractRanges(container, label) {
 
 function ensureInitialRangeRow(container, minFieldId, maxFieldId) {
   if (container.children.length > 0) return;
-  addRangeRow(container, getDefaultRangeValues(container, minFieldId, maxFieldId));
+  addRangeRow(container, getDefaultRangeValues(container, minFieldId, maxFieldId), {
+    showPercentage: false,
+    onRemove: () => syncRangeMode(container, minFieldId, maxFieldId)
+  });
+  disableRangeMode(container);
+}
+
+function handleAddRange(container, minFieldId, maxFieldId) {
+  if (container.children.length === 0) {
+    ensureInitialRangeRow(container, minFieldId, maxFieldId);
+  }
+
+  enableRangeMode(container);
+  addRangeRow(container, getDefaultRangeValues(container, minFieldId, maxFieldId), {
+    showPercentage: true,
+    onRemove: () => syncRangeMode(container, minFieldId, maxFieldId)
+  });
+}
+
+function enableRangeMode(container) {
+  container.dataset.rangeMode = 'enabled';
+  Array.from(container.querySelectorAll('.range-row')).forEach((row, index) => {
+    toggleRangePercentage(row, true);
+    if (index === 0) {
+      const percentageInput = row.querySelector('.range-percentage');
+      if (!percentageInput.value) {
+        percentageInput.value = '100';
+      }
+    }
+  });
+}
+
+function disableRangeMode(container) {
+  container.dataset.rangeMode = 'single';
+  const rows = Array.from(container.querySelectorAll('.range-row'));
+  rows.forEach((row, index) => {
+    toggleRangePercentage(row, false);
+    row.querySelector('.range-percentage').value = '';
+    if (index > 0) {
+      row.remove();
+    }
+  });
+}
+
+function toggleRangePercentage(row, visible) {
+  const percentageField = row.querySelector('.range-percentage-field');
+  if (!percentageField) return;
+  percentageField.style.display = visible ? '' : 'none';
+}
+
+function syncRangeMode(container, minFieldId, maxFieldId) {
+  if (container.children.length === 0) {
+    ensureInitialRangeRow(container, minFieldId, maxFieldId);
+    return;
+  }
+
+  if (container.dataset.rangeMode !== 'enabled') return;
+
+  if (container.children.length <= 1) {
+    disableRangeMode(container);
+  }
 }
 
 function extractDateConfig() {
