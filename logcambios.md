@@ -96,3 +96,7 @@
 
 ## Versión 1.7.2 - 2025-12-12
 - Conservar los tesauros adicionales detectados al cerrar el modal de validación permite que el botón "Crear columna" pregunte y abra con los datos sugeridos.
+
+## Versión 1.7.3 - 2025-12-12
+- Sustituye el `layerGroup` de marcadores por un `featureGroup` en el mapa para poder calcular los límites de los puntos sin
+  errores al buscar por población y ajustar correctamente la vista a los resultados.

@@ -518,7 +518,7 @@ function initAreaMap() {
     attribution: 'Datos geográficos © OpenStreetMap contributors'
   }).addTo(mapInstance);
 
-  pointsLayerGroup = L.layerGroup().addTo(mapInstance);
+  pointsLayerGroup = L.featureGroup().addTo(mapInstance);
 
   mapInstance.on('click', handleMapClick);
   mapInstance.on('mousemove', (event) => {
