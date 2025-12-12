@@ -225,7 +225,7 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
           'Sí',
           baseConfig.lat.name,
           'Texto',
-          typeof point.lat === 'number' ? point.lat.toFixed(5) : '',
+          formatCoordinate(point.lat),
           ''
         ]);
       }
@@ -237,7 +237,7 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
           'Sí',
           baseConfig.lng.name,
           'Texto',
-          typeof point.lng === 'number' ? point.lng.toFixed(5) : '',
+          formatCoordinate(point.lng),
           ''
         ]);
       }
@@ -271,6 +271,18 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
 function formatCellValueForTable(column, value) {
   const formatted = formatCellValue(column, value);
   return formatted ?? '';
+}
+
+function formatCoordinate(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value.toString();
+  }
+
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+
+  return '';
 }
 
 function renderTransposedTable(data) {
