@@ -107,21 +107,36 @@ const togglePanelsByMode = () => {
 
 const markStepAsSkipped = (panel) => {
   if (!panel) return;
+  panel.classList.remove('is-active', 'is-done');
   panel.classList.add('is-skipped');
   const feedback = panel.querySelector('.step-feedback');
   if (feedback) {
     feedback.textContent = 'Fase saltada. Puedes retomarla cuando lo necesites.';
     feedback.classList.add('step-feedback--skipped');
+    feedback.classList.remove('step-feedback--active');
+  }
+};
+
+const markStepAsActive = (panel, message) => {
+  if (!panel) return;
+  panel.classList.remove('is-skipped', 'is-done');
+  panel.classList.add('is-active');
+  const feedback = panel.querySelector('.step-feedback');
+  if (feedback && message) {
+    feedback.textContent = message;
+    feedback.classList.remove('step-feedback--skipped');
+    feedback.classList.add('step-feedback--active');
   }
 };
 
 const markStepAsDone = (panel, message) => {
   if (!panel) return;
-  panel.classList.remove('is-skipped');
+  panel.classList.remove('is-skipped', 'is-active');
+  panel.classList.add('is-done');
   const feedback = panel.querySelector('.step-feedback');
   if (feedback && message) {
     feedback.textContent = message;
-    feedback.classList.remove('step-feedback--skipped');
+    feedback.classList.remove('step-feedback--skipped', 'step-feedback--active');
   }
 };
 
@@ -415,6 +430,10 @@ initBaseColumnsModal((config) => {
 // Inicializar el módulo de importación de Excel
 initImportExcel((expedientes) => {
   // Cuando se importan expedientes, generar puntos y renderizar
+  markStepAsActive(
+    orderedStepPanels[0],
+    'Cargando expedientes y generando filas ficticias para dibujarlas en el mapa...'
+  );
   const pointsToRender = generatePointsFromExpedientes(expedientes);
   renderPoints(pointsToRender);
   plotPointsOnMap(pointsToRender);
@@ -425,6 +444,7 @@ initImportExcel((expedientes) => {
     searchMode = 'map';
     togglePanelsByMode();
   }
+  markStepAsDone(orderedStepPanels[1], 'Puntos de los expedientes dibujados en el mapa.');
   markStepAsDone(
     orderedStepPanels[0],
     'Expedientes importados. Se generan filas ficticias y se representan en el mapa.'
@@ -579,6 +599,14 @@ async function performSearch() {
   }
 
   try {
+    markStepAsActive(
+      orderedStepPanels[1],
+      'Buscando puntos por municipio y preparando el siguiente bloque de mapa.'
+    );
+    markStepAsActive(
+      orderedStepPanels[2],
+      'Llegarán los puntos en bloques. Se irán pintando en cuanto estén listos.'
+    );
     const data = await fetchPointsInBatches({
       limit,
       requestFactory: (chunkLimit) => fetchPoints({ city, neighbourhood, limit: chunkLimit })
@@ -595,6 +623,10 @@ async function performSearch() {
     });
     renderPoints(data.points);
     plotPointsOnMap(data.points);
+    markStepAsDone(
+      orderedStepPanels[1],
+      'Consulta por municipio completada y puntos pintados en el mapa.'
+    );
     markStepAsDone(
       orderedStepPanels[2],
       'Puntos obtenidos. Los resultados están listos para enriquecer o transponer.'
@@ -735,6 +767,15 @@ function startAreaSelection() {
     areaMapContainer.classList.add('drawing');
   }
 
+  markStepAsActive(
+    orderedStepPanels[1],
+    'Dibuja el área en el mapa para crear los puntos del siguiente bloque.'
+  );
+  markStepAsActive(
+    orderedStepPanels[2],
+    'Completa el polígono para lanzar la consulta y pintar los resultados.'
+  );
+
   setAreaStatus('Haz clic en el mapa para añadir vértices. Cierra el polígono pulsando sobre el primer punto.');
   renderAreaCoordinates([]);
 }
@@ -856,6 +897,10 @@ function finalizePolygon() {
     areaMapContainer.classList.remove('drawing');
   }
   renderAreaCoordinates(polygonVertices);
+  markStepAsActive(
+    orderedStepPanels[2],
+    'Área cerrada. Pulsa "Buscar en área" para pintar los puntos en el mapa.'
+  );
 }
 
 async function performAreaSearch() {
@@ -874,6 +919,14 @@ async function performAreaSearch() {
   ];
 
   setAreaStatus('Consultando el área en bloques de 100 puntos para evitar bloqueos...');
+  markStepAsActive(
+    orderedStepPanels[1],
+    'Consultando el área dibujada y recogiendo puntos en bloques.'
+  );
+  markStepAsActive(
+    orderedStepPanels[2],
+    'Pintaremos los puntos y columnas a medida que lleguen los resultados.'
+  );
 
   try {
     const data = await fetchPointsInBatches({
@@ -899,6 +952,10 @@ async function performAreaSearch() {
     } else {
       setAreaStatus('Resultados cargados. Puedes volver a dibujar para refinar.');
     }
+    markStepAsDone(
+      orderedStepPanels[1],
+      'Área consultada y puntos dibujados en el mapa.'
+    );
     markStepAsDone(
       orderedStepPanels[2],
       'Área consultada. Los puntos obtenidos se han dibujado en el mapa.'
