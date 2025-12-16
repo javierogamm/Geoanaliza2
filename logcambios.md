@@ -165,3 +165,7 @@
   la exportación exitosa de la transposición.
 - Los bloques activos hacen scroll automático al activarse, manteniendo la guía visual del flujo sin alterar el mapa ni
   los resultados.
+
+## Versión 1.9.4 - 2025-12-17
+- La exportación de datos transpuestos conserva las coordenadas de latitud y longitud como texto incluso cuando se
+  personalizan los nombres de los campos base, evitando que Excel interprete los valores como números en millones.

@@ -9,7 +9,7 @@ export const TRANSPOSED_EXPORT_HEADERS = [
   'Valor campo a'
 ];
 
-export function buildExportRows(rows, nombreEntidad, nombreTarea) {
+export function buildExportRows(rows, nombreEntidad, nombreTarea, coordinateFieldAliases = new Set()) {
   return rows.map((row) => [
     nombreEntidad ?? '',
     row?.[0] ?? '',
@@ -17,13 +17,13 @@ export function buildExportRows(rows, nombreEntidad, nombreTarea) {
     row?.[2] ?? '',
     row?.[3] ?? '',
     row?.[4] ?? '',
-    preserveCoordinateValue(row?.[3], row?.[5]),
+    preserveCoordinateValue(row?.[3], row?.[5], coordinateFieldAliases),
     row?.[6] ?? ''
   ]);
 }
 
-function preserveCoordinateValue(fieldName, value) {
-  if (isCoordinateField(fieldName)) {
+function preserveCoordinateValue(fieldName, value, coordinateFieldAliases = new Set()) {
+  if (isCoordinateField(fieldName, coordinateFieldAliases)) {
     const rawValue = value ?? '';
     const stringValue = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue);
     if (!stringValue) return '';
@@ -34,10 +34,15 @@ function preserveCoordinateValue(fieldName, value) {
   return value ?? '';
 }
 
-function isCoordinateField(fieldName) {
+function isCoordinateField(fieldName, coordinateFieldAliases = new Set()) {
   if (!fieldName) return false;
   const normalized = String(fieldName).toLowerCase();
-  return normalized.includes('latitud') || normalized.includes('longitud');
+
+  if (normalized.includes('latitud') || normalized.includes('longitud')) {
+    return true;
+  }
+
+  return coordinateFieldAliases.has(normalized);
 }
 
 export function escapeCsvValue(value) {
@@ -49,7 +54,12 @@ export function escapeCsvValue(value) {
 }
 
 export function buildTransposedCsvContent(transposedData, nombreEntidad, nombreTarea) {
-  const exportRows = buildExportRows(transposedData.rows, nombreEntidad, nombreTarea);
+  const exportRows = buildExportRows(
+    transposedData.rows,
+    nombreEntidad,
+    nombreTarea,
+    transposedData.coordinateFieldAliases || new Set()
+  );
   const csvRows = [TRANSPOSED_EXPORT_HEADERS, ...exportRows];
   return csvRows.map((row) => row.map(escapeCsvValue).join(';')).join('\r\n');
 }

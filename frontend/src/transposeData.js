@@ -185,6 +185,11 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
   const baseConfig = getEffectiveBaseConfig();
   const customColumns = getCustomColumns();
   const expedientesValues = expedientes?.values || [];
+  const coordinateFieldAliases = new Set(
+    [baseConfig?.lat?.name, baseConfig?.lng?.name, baseConfig?.lat?.reference, baseConfig?.lng?.reference]
+      .filter(Boolean)
+      .map((alias) => alias.toLowerCase())
+  );
 
   // Headers para la vista previa: Código expedi | Nombre tarea | Crear tarea | Nombre campo | Tipo campo te | Valor campo | Valor campo a
   // (Nombre entid se añadirá al exportar)
@@ -268,7 +273,7 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
     }
   });
 
-  return { headers, rows };
+  return { headers, rows, coordinateFieldAliases };
 }
 
 function formatCellValueForTable(column, value) {
