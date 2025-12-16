@@ -1,12 +1,12 @@
 export const TRANSPOSED_EXPORT_HEADERS = [
-  'Nombre entid',
-  'Código expedi',
+  'Nombre entidad',
+  'Código expediente',
   'Nombre tarea',
   'Crear tarea',
-  'Nombre campo',
-  'Tipo campo te',
+  'Nombre campo castellano',
+  'Tipo campo tesauro',
   'Valor campo',
-  'Valor campo a'
+  'Valor campo adicional'
 ];
 
 export function buildExportRows(rows, nombreEntidad, nombreTarea) {

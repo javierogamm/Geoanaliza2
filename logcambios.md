@@ -165,3 +165,9 @@
   la exportación exitosa de la transposición.
 - Los bloques activos hacen scroll automático al activarse, manteniendo la guía visual del flujo sin alterar el mapa ni
   los resultados.
+
+## Versión 1.9.4 - 2025-12-18
+- La exportación de transposición adopta los encabezados del CSV de referencia y mantiene las coordenadas como texto para
+  evitar reformatos numéricos en latitud y longitud.
+- El botón de exportar abre un modal dedicado donde se introducen el nombre de la entidad y el de la tarea antes de
+  generar el CSV.

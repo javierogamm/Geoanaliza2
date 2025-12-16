@@ -252,6 +252,30 @@
         </div>
       </div>
 
+      <!-- Modal para exportar CSV transpuesto -->
+      <div id="export-csv-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Exportar CSV de transposición</h3>
+            <button id="close-export-csv-modal" class="btn-close">&times;</button>
+          </div>
+          <form id="export-csv-form" class="column-form">
+            <div class="field">
+              <label for="export-entity-name">Nombre de la entidad *</label>
+              <input id="export-entity-name" type="text" placeholder="Ej: Ayuntamiento de..." required />
+            </div>
+            <div class="field">
+              <label for="export-task-name">Nombre de la tarea *</label>
+              <input id="export-task-name" type="text" placeholder="Ej: RPA data VIC" required />
+            </div>
+            <div class="modal-actions">
+              <button type="button" id="cancel-export-csv" class="btn-secondary">Cancelar</button>
+              <button type="submit" class="btn">Guardar CSV</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- Modal para importar expedientes -->
       <div id="import-modal" class="modal">
         <div class="modal-content">
