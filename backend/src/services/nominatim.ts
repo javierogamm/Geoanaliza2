@@ -1,4 +1,4 @@
-import { BoundingBox, CityLocation } from '../types';
+import { BoundingBox, CityLocation, SearchLocation } from '../types';
 import fetch, { withUserAgent } from '../utils/fetch';
 import { createRateLimiter } from '../utils/rateLimiter';
 
@@ -195,4 +195,72 @@ export const fetchNeighbourhoodBoundingBox = async (
   });
 
   return box;
+};
+
+export const searchLocation = async (query: string): Promise<SearchLocation> => {
+  const url = new URL(NOMINATIM_SEARCH_URL);
+  url.searchParams.set('format', 'jsonv2');
+  url.searchParams.set('addressdetails', '1');
+  url.searchParams.set('limit', '1');
+  url.searchParams.set('q', query);
+
+  const startedAt = Date.now();
+  console.info('[nominatim] Searching location', { query, url: url.toString() });
+
+  const response = await scheduleNominatim(() => fetch(url.toString(), withUserAgent()));
+  console.info('[nominatim] Location search response', {
+    query,
+    status: response.status,
+    statusText: response.statusText,
+    durationMs: Date.now() - startedAt
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(
+      `Nominatim respondió ${response.status} ${response.statusText}${
+        detail ? `: ${detail}` : ''
+      }`
+    );
+  }
+
+  const results = (await response.json()) as NominatimResult[];
+  if (!Array.isArray(results) || results.length === 0) {
+    throw new Error('No se encontró la localidad solicitada en Nominatim');
+  }
+
+  const [match] = results;
+  const centerLat = Number.parseFloat(match.lat);
+  const centerLng = Number.parseFloat(match.lon);
+
+  if (!Number.isFinite(centerLat) || !Number.isFinite(centerLng)) {
+    throw new Error('La localidad encontrada no tiene coordenadas válidas en Nominatim');
+  }
+
+  const boundingBox = parseBoundingBox(match.boundingbox);
+
+  const hasValidBoundingBox =
+    Number.isFinite(boundingBox.south) &&
+    Number.isFinite(boundingBox.north) &&
+    Number.isFinite(boundingBox.west) &&
+    Number.isFinite(boundingBox.east);
+
+  if (!hasValidBoundingBox) {
+    throw new Error('No se pudo construir el área para centrar la localidad encontrada');
+  }
+
+  const center = { lat: centerLat, lng: centerLng };
+
+  console.info('[nominatim] Location parsed', {
+    query,
+    name: match.display_name,
+    boundingBox,
+    center
+  });
+
+  return {
+    name: match.display_name,
+    boundingBox,
+    center
+  };
 };

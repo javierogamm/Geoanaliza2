@@ -8,6 +8,12 @@ const transposeBtn = document.getElementById('transpose-btn');
 const closeBtn = document.getElementById('close-transpose-modal');
 const exportBtn = document.getElementById('export-transposed-excel');
 const tableContainer = document.getElementById('transposed-table-container');
+const exportCsvModal = document.getElementById('export-csv-modal');
+const exportCsvForm = document.getElementById('export-csv-form');
+const closeExportCsvModalBtn = document.getElementById('close-export-csv-modal');
+const cancelExportCsvModalBtn = document.getElementById('cancel-export-csv');
+const exportEntityInput = document.getElementById('export-entity-name');
+const exportTaskInput = document.getElementById('export-task-name');
 
 // Modal de selección de campos
 const selectFieldsModal = document.getElementById('select-fields-modal');
@@ -55,7 +61,13 @@ export function initTranspose(getCurrentPoints, getCustomColumnsData) {
     handleFieldSelection();
   });
 
-  exportBtn.addEventListener('click', exportToCSV);
+  exportBtn.addEventListener('click', openExportCsvModal);
+  exportCsvForm.addEventListener('submit', handleExportCsvSubmit);
+  closeExportCsvModalBtn.addEventListener('click', closeExportCsvModal);
+  cancelExportCsvModalBtn.addEventListener('click', closeExportCsvModal);
+  exportCsvModal.addEventListener('click', (e) => {
+    if (e.target === exportCsvModal) closeExportCsvModal();
+  });
 }
 
 export function showTransposeButton() {
@@ -186,16 +198,16 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
   const customColumns = getCustomColumns();
   const expedientesValues = expedientes?.values || [];
 
-  // Headers para la vista previa: Código expedi | Nombre tarea | Crear tarea | Nombre campo | Tipo campo te | Valor campo | Valor campo a
-  // (Nombre entid se añadirá al exportar)
+  // Headers para la vista previa: Código expediente | Nombre tarea | Crear tarea | Nombre campo castellano | Tipo campo tesauro | Valor campo | Valor campo adicional
+  // (Nombre entidad se añadirá al exportar)
   const headers = [
-    'Código expedi',
+    'Código expediente',
     'Nombre tarea',
     'Crear tarea',
-    'Nombre campo',
-    'Tipo campo te',
+    'Nombre campo castellano',
+    'Tipo campo tesauro',
     'Valor campo',
-    'Valor campo a'
+    'Valor campo adicional'
   ];
 
   const rows = [];
@@ -332,23 +344,47 @@ function closeModal() {
   modal.classList.remove('active');
 }
 
-function exportToCSV() {
+function openExportCsvModal() {
   if (!transposedData) {
     alert('No hay datos transpuestos para exportar');
     return;
   }
 
-  // Preguntar Nombre de la Entidad
-  const nombreEntidad = prompt('Nombre de la Entidad:');
+  exportCsvModal.classList.add('active');
+  if (!exportEntityInput.value.trim()) {
+    exportEntityInput.focus();
+  } else {
+    exportTaskInput.focus();
+  }
+}
+
+function closeExportCsvModal() {
+  exportCsvModal.classList.remove('active');
+}
+
+function handleExportCsvSubmit(event) {
+  event.preventDefault();
+  const nombreEntidad = exportEntityInput.value.trim();
+  const nombreTarea = exportTaskInput.value.trim();
+
   if (!nombreEntidad) {
     alert('Debes introducir el Nombre de la Entidad');
+    exportEntityInput.focus();
     return;
   }
 
-  // Preguntar Nombre de la tarea
-  const nombreTarea = prompt('Nombre de la tarea:');
   if (!nombreTarea) {
     alert('Debes introducir el Nombre de la tarea');
+    exportTaskInput.focus();
+    return;
+  }
+
+  exportToCSV(nombreEntidad, nombreTarea);
+}
+
+function exportToCSV(nombreEntidad, nombreTarea) {
+  if (!transposedData) {
+    alert('No hay datos transpuestos para exportar');
     return;
   }
 
@@ -364,5 +400,6 @@ function exportToCSV() {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+  closeExportCsvModal();
   document.dispatchEvent(new CustomEvent('transposition-exported'));
 }

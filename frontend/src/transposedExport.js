@@ -1,12 +1,12 @@
 export const TRANSPOSED_EXPORT_HEADERS = [
-  'Nombre entid',
-  'Código expedi',
+  'Nombre entidad',
+  'Código expediente',
   'Nombre tarea',
   'Crear tarea',
-  'Nombre campo',
-  'Tipo campo te',
+  'Nombre campo castellano',
+  'Tipo campo tesauro',
   'Valor campo',
-  'Valor campo a'
+  'Valor campo adicional'
 ];
 
 export function buildExportRows(rows, nombreEntidad, nombreTarea) {
@@ -27,8 +27,8 @@ function preserveCoordinateValue(fieldName, value) {
     const rawValue = value ?? '';
     const stringValue = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue);
     if (!stringValue) return '';
-    // Prefijar como texto para que Excel no elimine los puntos decimales al interpretar la celda.
-    return `="${stringValue}"`;
+    // Prefijar con [ (sin cierre) para evitar interpretaciones numéricas sin usar el formato ="".
+    return `[${stringValue}`;
   }
 
   return value ?? '';

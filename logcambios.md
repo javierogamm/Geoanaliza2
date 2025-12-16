@@ -165,3 +165,32 @@
   la exportación exitosa de la transposición.
 - Los bloques activos hacen scroll automático al activarse, manteniendo la guía visual del flujo sin alterar el mapa ni
   los resultados.
+
+## Versión 1.9.4 - 2025-12-18
+- La exportación de transposición adopta los encabezados del CSV de referencia y mantiene las coordenadas como texto para
+  evitar reformatos numéricos en latitud y longitud.
+- El botón de exportar abre un modal dedicado donde se introducen el nombre de la entidad y el de la tarea antes de
+  generar el CSV.
+
+## Versión 1.9.5 - 2025-12-19
+- El CSV transpuesto conserva las coordenadas como texto usando el prefijo `[coordenda]` en lugar del formato `=""`,
+  evitando reinterpretaciones numéricas al abrir el archivo en hojas de cálculo.
+
+## Versión 1.9.6 - 2025-12-20
+- El CSV transpuesto sigue exportando las coordenadas como texto pero ahora solo antepone el símbolo `[`, evitando fórmulas
+  y manteniendo latitud y longitud sin reinterpretaciones numéricas.
+- El mapa incorpora un buscador de localidades que centra la vista antes de dibujar el polígono y muestra un marcador en el
+  punto encontrado sin afectar al flujo existente.
+- Los puntos ficticios o sin procedencia OSM dejan de pintarse en el mapa de inicio para evitar marcadores en el océano
+  Atlántico hasta que se cargan resultados reales.
+
+## Versión 1.9.7 - 2025-12-21
+- La exportación transpuesta elimina el corchete de cierre y solo antepone `[` en latitudes y longitudes para que se
+  mantengan como texto sin fórmulas ocultas.
+- El buscador de localidad del mapa ahora se muestra únicamente en el modo "Con mapa" cuando se van a pintar puntos por
+  área, evitando ruido en otros modos.
+
+## Versión 1.9.8 - 2025-12-22
+- El buscador de localidades valida que Nominatim devuelva coordenadas y bounding box válidos antes de centrar el mapa,
+  evitando errores como "Cannot read properties of undefined (reading 'lat')" al pintar el marcador.
+- Si la localidad no tiene datos utilizables, se muestra un mensaje claro al usuario sin interrumpir el flujo del mapa.

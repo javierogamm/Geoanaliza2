@@ -19,3 +19,12 @@ export type CityLocation = {
   displayName: string;
   boundingBox: BoundingBox;
 };
+
+export type SearchLocation = {
+  name: string;
+  boundingBox: BoundingBox;
+  center: {
+    lat: number;
+    lng: number;
+  };
+};

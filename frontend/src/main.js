@@ -1,4 +1,4 @@
-import { fetchPoints, fetchPointsInBoundingBox } from './api.js';
+import { fetchPoints, fetchPointsInBoundingBox, searchLocation } from './api.js';
 import {
   clearResults,
   renderMeta,
@@ -33,6 +33,9 @@ const areaMapContainer = document.getElementById('area-map');
 const drawAreaButton = document.getElementById('draw-area-btn');
 const resetAreaButton = document.getElementById('reset-area-btn');
 const searchAreaButton = document.getElementById('search-area-btn');
+const areaSearchInput = document.getElementById('area-search');
+const areaSearchButton = document.getElementById('area-search-btn');
+const areaSearchSlot = document.getElementById('area-search-slot');
 const searchModeRadios = document.querySelectorAll('input[name="search-mode"]');
 const formPanel = document.querySelector('.form-panel');
 const mapPanel = document.querySelector('.area-panel');
@@ -60,6 +63,7 @@ let areaBounds = null;
 let polygonVertices = [];
 let vertexMarkers = [];
 let pointsLayerGroup = null;
+let locationMarker = null;
 let searchMode = 'city';
 const orderedStepPanels = Array.from(stepPanels);
 
@@ -72,6 +76,15 @@ const convertBoundsToBoundingBox = (bounds) => ({
   north: bounds.getNorth(),
   east: bounds.getEast()
 });
+
+const fitMapToBoundingBox = (bbox) => {
+  if (!mapInstance || !bbox) return;
+  const bounds = L.latLngBounds(
+    [bbox.south, bbox.west],
+    [bbox.north, bbox.east]
+  );
+  mapInstance.fitBounds(bounds, { padding: [24, 24], maxZoom: 13 });
+};
 
 const parseLimit = (value) => {
   const parsed = parseInt(value, 10);
@@ -102,6 +115,10 @@ const togglePanelsByMode = () => {
 
   if (mapPanel) {
     mapPanel.classList.toggle('is-hidden', searchMode !== 'map');
+  }
+
+  if (areaSearchSlot) {
+    areaSearchSlot.classList.toggle('is-hidden', searchMode !== 'map');
   }
 };
 
@@ -707,6 +724,21 @@ if (searchAreaButton) {
   });
 }
 
+if (areaSearchButton) {
+  areaSearchButton.addEventListener('click', () => {
+    focusOnSearchedLocation();
+  });
+}
+
+if (areaSearchInput) {
+  areaSearchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      focusOnSearchedLocation();
+    }
+  });
+}
+
 function clearAreaSelection() {
   areaBounds = null;
   polygonVertices = [];
@@ -727,8 +759,8 @@ function plotPointsOnMap(points = []) {
 
   pointsLayerGroup.clearLayers();
 
-  const validPoints = (points || []).filter((point) =>
-    typeof point?.lat === 'number' && typeof point?.lng === 'number'
+  const validPoints = (points || []).filter(
+    (point) => typeof point?.lat === 'number' && typeof point?.lng === 'number' && point?.source === 'osm'
   );
 
   validPoints.forEach((point) => {
@@ -747,7 +779,7 @@ function plotPointsOnMap(points = []) {
 
   if (!selectionEnabled) {
     const bounds = pointsLayerGroup.getBounds();
-    if (bounds?.isValid()) {
+    if (bounds?.isValid() && validPoints.length) {
       mapInstance.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
     }
   }
@@ -840,6 +872,63 @@ function removeAreaLayers() {
   if (mapInstance && vertexMarkers.length) {
     vertexMarkers.forEach((marker) => mapInstance.removeLayer(marker));
     vertexMarkers = [];
+  }
+}
+
+function clearLocationMarker() {
+  if (mapInstance && locationMarker) {
+    mapInstance.removeLayer(locationMarker);
+    locationMarker = null;
+  }
+}
+
+async function focusOnSearchedLocation() {
+  if (!areaSearchInput || searchMode !== 'map') {
+    setAreaStatus('Activa "Con mapa" para ubicar la zona antes de dibujar.', true);
+    return;
+  }
+
+  const query = areaSearchInput.value.trim();
+  if (!query) {
+    setAreaStatus('Introduce una localidad para centrar el mapa.', true);
+    return;
+  }
+
+  if (!mapInstance) {
+    setAreaStatus('El mapa todavía no está listo.', true);
+    return;
+  }
+
+  if (areaSearchButton) {
+    areaSearchButton.disabled = true;
+  }
+  setAreaStatus(`Buscando ${query} en el mapa...`);
+
+  try {
+    const location = await searchLocation(query);
+    const hasValidCenter =
+      location?.center &&
+      Number.isFinite(location.center.lat) &&
+      Number.isFinite(location.center.lng);
+    if (!hasValidCenter || !location?.boundingBox) {
+      throw new Error('La localidad encontrada no tiene coordenadas utilizables. Prueba con otra búsqueda.');
+    }
+    clearAreaSelection();
+    clearLocationMarker();
+    fitMapToBoundingBox(location.boundingBox);
+    locationMarker = L.marker([location.center.lat, location.center.lng], { title: location.name }).addTo(
+      mapInstance
+    );
+    if (location.name) {
+      locationMarker.bindPopup(location.name).openPopup();
+    }
+    setAreaStatus(`Localidad encontrada: ${location.name}. Dibuja el área sobre el mapa.`);
+  } catch (error) {
+    setAreaStatus(error.message || 'No se pudo localizar la zona indicada.', true);
+  } finally {
+    if (areaSearchButton) {
+      areaSearchButton.disabled = false;
+    }
   }
 }
 
