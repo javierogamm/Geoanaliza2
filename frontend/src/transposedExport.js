@@ -10,16 +10,18 @@ export const TRANSPOSED_EXPORT_HEADERS = [
 ];
 
 export function buildExportRows(rows, nombreEntidad, nombreTarea, coordinateFieldAliases = new Set()) {
-  return rows.map((row) => [
-    nombreEntidad ?? '',
-    row?.[0] ?? '',
-    nombreTarea ?? '',
-    row?.[2] ?? '',
-    row?.[3] ?? '',
-    row?.[4] ?? '',
-    preserveCoordinateValue(row?.[3], row?.[5], coordinateFieldAliases),
-    row?.[6] ?? ''
-  ]);
+  return rows.map((row) =>
+    [
+      nombreEntidad ?? '',
+      row?.[0] ?? '',
+      nombreTarea ?? '',
+      row?.[2] ?? '',
+      row?.[3] ?? '',
+      row?.[4] ?? '',
+      preserveCoordinateValue(row?.[3], row?.[5], coordinateFieldAliases),
+      row?.[6] ?? ''
+    ].map(formatAsLiteralText)
+  );
 }
 
 function preserveCoordinateValue(fieldName, value, coordinateFieldAliases = new Set()) {
@@ -27,11 +29,17 @@ function preserveCoordinateValue(fieldName, value, coordinateFieldAliases = new 
     const rawValue = value ?? '';
     const stringValue = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue);
     if (!stringValue) return '';
-    // Prefijar como texto para que Excel no elimine los puntos decimales al interpretar la celda.
-    return `="${stringValue}"`;
+    return stringValue;
   }
 
   return value ?? '';
+}
+
+function formatAsLiteralText(value) {
+  const str = typeof value === 'string' ? value : String(value ?? '');
+  if (!str) return '';
+  // Prefijo con apóstrofe para que Excel mantenga el valor literalmente sin convertirlo a número.
+  return `'${str}`;
 }
 
 function isCoordinateField(fieldName, coordinateFieldAliases = new Set()) {
