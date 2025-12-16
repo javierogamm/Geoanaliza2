@@ -171,3 +171,7 @@
   evitar reformatos numéricos en latitud y longitud.
 - El botón de exportar abre un modal dedicado donde se introducen el nombre de la entidad y el de la tarea antes de
   generar el CSV.
+
+## Versión 1.9.5 - 2025-12-19
+- El CSV transpuesto conserva las coordenadas como texto usando el prefijo `[coordenda]` en lugar del formato `=""`,
+  evitando reinterpretaciones numéricas al abrir el archivo en hojas de cálculo.
