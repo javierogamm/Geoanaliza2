@@ -165,3 +165,7 @@
   la exportación exitosa de la transposición.
 - Los bloques activos hacen scroll automático al activarse, manteniendo la guía visual del flujo sin alterar el mapa ni
   los resultados.
+
+## Versión 1.9.4 - 2025-12-17
+- La exportación CSV de la transposición envuelve las coordenadas entre corchetes para que Excel las mantenga como texto y
+  no reinterprete sus valores numéricos.
