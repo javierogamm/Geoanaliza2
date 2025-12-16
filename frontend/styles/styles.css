@@ -197,6 +197,23 @@ h1 {
   align-items: flex-end;
 }
 
+.area-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.area-search__controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+
+.area-search input {
+  min-width: 220px;
+}
+
 .area-map {
   height: 640px;
   width: 100%;

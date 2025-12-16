@@ -175,3 +175,11 @@
 ## Versión 1.9.5 - 2025-12-19
 - El CSV transpuesto conserva las coordenadas como texto usando el prefijo `[coordenda]` en lugar del formato `=""`,
   evitando reinterpretaciones numéricas al abrir el archivo en hojas de cálculo.
+
+## Versión 1.9.6 - 2025-12-20
+- El CSV transpuesto sigue exportando las coordenadas como texto pero ahora solo antepone el símbolo `[`, evitando fórmulas
+  y manteniendo latitud y longitud sin reinterpretaciones numéricas.
+- El mapa incorpora un buscador de localidades que centra la vista antes de dibujar el polígono y muestra un marcador en el
+  punto encontrado sin afectar al flujo existente.
+- Los puntos ficticios o sin procedencia OSM dejan de pintarse en el mapa de inicio para evitar marcadores en el océano
+  Atlántico hasta que se cargan resultados reales.

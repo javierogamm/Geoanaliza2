@@ -39,3 +39,18 @@ export async function fetchPointsInBoundingBox({ bbox, limit, city }) {
 
   return payload;
 }
+
+export async function searchLocation(query) {
+  const params = new URLSearchParams();
+  params.set('q', query.trim());
+
+  const response = await fetch(`/api/locations?${params.toString()}`);
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = payload?.error || 'No se pudo localizar la zona indicada';
+    throw new Error(message);
+  }
+
+  return payload;
+}

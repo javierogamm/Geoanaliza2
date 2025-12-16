@@ -114,6 +114,19 @@
             <p class="meta">Dibuja un polígono en el mapa haciendo clic en cada vértice y ciérralo sobre el primer punto.</p>
           </div>
           <div class="area-actions">
+            <div class="area-search">
+              <label for="area-search">Localidad en el mapa</label>
+              <div class="area-search__controls">
+                <input
+                  id="area-search"
+                  name="area-search"
+                  type="text"
+                  placeholder="Ej. A Coruña"
+                  autocomplete="off"
+                />
+                <button id="area-search-btn" type="button" class="btn-secondary">Buscar y centrar</button>
+              </div>
+            </div>
             <div class="field compact-field">
               <label for="map-limit">Nº de puntos</label>
               <input id="map-limit" name="map-limit" type="number" min="1" max="1000" value="20" />
