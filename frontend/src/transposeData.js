@@ -186,16 +186,16 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
   const customColumns = getCustomColumns();
   const expedientesValues = expedientes?.values || [];
 
-  // Headers para la vista previa: Código expedi | Nombre tarea | Crear tarea | Nombre campo | Tipo campo te | Valor campo | Valor campo a
-  // (Nombre entid se añadirá al exportar)
+  // Headers para la vista previa: Código expediente | Nombre tarea | Crear tarea | Nombre campo castellano | Tipo campo tesauro | Valor campo |
+  // Valor campo adicional (Nombre entidad se añadirá al exportar)
   const headers = [
-    'Código expedi',
+    'Código expediente',
     'Nombre tarea',
     'Crear tarea',
-    'Nombre campo',
-    'Tipo campo te',
+    'Nombre campo castellano',
+    'Tipo campo tesauro',
     'Valor campo',
-    'Valor campo a'
+    'Valor campo adicional'
   ];
 
   const rows = [];

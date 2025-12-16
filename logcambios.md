@@ -1,5 +1,9 @@
 # Log de cambios
 
+## Versión 1.9.4 - 2025-12-17
+- Ajusta los encabezados de la transposición para que coincidan literalmente con el formato de exportación solicitado.
+- Añade en la raíz el ejemplo `FORMATO CORRECTO.csv` con las columnas en modo texto, sirviendo como referencia exacta de la salida.
+
 ## Versión 1.0.0 - 2025-02-03
 - Añadida configuración de `vercel.json` en la raíz para reescribir todas las rutas hacia el frontend estático y proxy de `/api` al backend hospedado en Render, evitando errores 404 en el despliegue de Vercel.
 
