@@ -189,3 +189,8 @@
   mantengan como texto sin fórmulas ocultas.
 - El buscador de localidad del mapa ahora se muestra únicamente en el modo "Con mapa" cuando se van a pintar puntos por
   área, evitando ruido en otros modos.
+
+## Versión 1.9.8 - 2025-12-22
+- El buscador de localidades valida que Nominatim devuelva coordenadas y bounding box válidos antes de centrar el mapa,
+  evitando errores como "Cannot read properties of undefined (reading 'lat')" al pintar el marcador.
+- Si la localidad no tiene datos utilizables, se muestra un mensaje claro al usuario sin interrumpir el flujo del mapa.

@@ -230,8 +230,26 @@ export const searchLocation = async (query: string): Promise<SearchLocation> => 
   }
 
   const [match] = results;
+  const centerLat = Number.parseFloat(match.lat);
+  const centerLng = Number.parseFloat(match.lon);
+
+  if (!Number.isFinite(centerLat) || !Number.isFinite(centerLng)) {
+    throw new Error('La localidad encontrada no tiene coordenadas válidas en Nominatim');
+  }
+
   const boundingBox = parseBoundingBox(match.boundingbox);
-  const center = { lat: Number.parseFloat(match.lat), lng: Number.parseFloat(match.lon) };
+
+  const hasValidBoundingBox =
+    Number.isFinite(boundingBox.south) &&
+    Number.isFinite(boundingBox.north) &&
+    Number.isFinite(boundingBox.west) &&
+    Number.isFinite(boundingBox.east);
+
+  if (!hasValidBoundingBox) {
+    throw new Error('No se pudo construir el área para centrar la localidad encontrada');
+  }
+
+  const center = { lat: centerLat, lng: centerLng };
 
   console.info('[nominatim] Location parsed', {
     query,

@@ -906,6 +906,13 @@ async function focusOnSearchedLocation() {
 
   try {
     const location = await searchLocation(query);
+    const hasValidCenter =
+      location?.center &&
+      Number.isFinite(location.center.lat) &&
+      Number.isFinite(location.center.lng);
+    if (!hasValidCenter || !location?.boundingBox) {
+      throw new Error('La localidad encontrada no tiene coordenadas utilizables. Prueba con otra búsqueda.');
+    }
     clearAreaSelection();
     clearLocationMarker();
     fitMapToBoundingBox(location.boundingBox);
