@@ -27,8 +27,8 @@ function preserveCoordinateValue(fieldName, value) {
     const rawValue = value ?? '';
     const stringValue = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue);
     if (!stringValue) return '';
-    // Prefijar con [ para evitar interpretaciones numéricas sin usar el formato ="".
-    return `[${stringValue}]`;
+    // Prefijar con [ (sin cierre) para evitar interpretaciones numéricas sin usar el formato ="".
+    return `[${stringValue}`;
   }
 
   return value ?? '';

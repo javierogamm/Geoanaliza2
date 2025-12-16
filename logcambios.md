@@ -183,3 +183,9 @@
   punto encontrado sin afectar al flujo existente.
 - Los puntos ficticios o sin procedencia OSM dejan de pintarse en el mapa de inicio para evitar marcadores en el océano
   Atlántico hasta que se cargan resultados reales.
+
+## Versión 1.9.7 - 2025-12-21
+- La exportación transpuesta elimina el corchete de cierre y solo antepone `[` en latitudes y longitudes para que se
+  mantengan como texto sin fórmulas ocultas.
+- El buscador de localidad del mapa ahora se muestra únicamente en el modo "Con mapa" cuando se van a pintar puntos por
+  área, evitando ruido en otros modos.

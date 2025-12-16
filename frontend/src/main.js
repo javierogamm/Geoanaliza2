@@ -35,6 +35,7 @@ const resetAreaButton = document.getElementById('reset-area-btn');
 const searchAreaButton = document.getElementById('search-area-btn');
 const areaSearchInput = document.getElementById('area-search');
 const areaSearchButton = document.getElementById('area-search-btn');
+const areaSearchSlot = document.getElementById('area-search-slot');
 const searchModeRadios = document.querySelectorAll('input[name="search-mode"]');
 const formPanel = document.querySelector('.form-panel');
 const mapPanel = document.querySelector('.area-panel');
@@ -114,6 +115,10 @@ const togglePanelsByMode = () => {
 
   if (mapPanel) {
     mapPanel.classList.toggle('is-hidden', searchMode !== 'map');
+  }
+
+  if (areaSearchSlot) {
+    areaSearchSlot.classList.toggle('is-hidden', searchMode !== 'map');
   }
 };
 
