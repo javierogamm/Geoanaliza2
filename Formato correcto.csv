@@ -1,0 +1,6 @@
+﻿Nombre entidad;Código expediente;Nombre tarea;Crear tarea;Nombre campo castellano;Tipo campo tesauro;Valor campo;Valor campo adicional
+Ayuntamiento de Configuración Avanzada Demo;2071/2025;RPA data VIC;Sí;Direccion RPA;Texto;Carrer de Ripoll 33;
+Ayuntamiento de Configuración Avanzada Demo;2071/2025;RPA data VIC;Sí;Latitud (Vic);Texto;4.19462891;
+Ayuntamiento de Configuración Avanzada Demo;2071/2025;RPA data VIC;Sí;Longitud (Vic);Texto;2.255043;
+Ayuntamiento de Configuración Avanzada Demo;2071/2025;RPA data VIC;Sí;Carácter de la ocupación RPA;Texto;Permanente;
+Ayuntamiento de Configuración Avanzada Demo;2071/2025;RPA data VIC;Sí;Número de vehículos RPA;Texto;2;
