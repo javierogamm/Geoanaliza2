@@ -17,27 +17,41 @@ export function buildExportRows(rows, nombreEntidad, nombreTarea) {
     row?.[2] ?? '',
     row?.[3] ?? '',
     row?.[4] ?? '',
-    preserveCoordinateValue(row?.[3], row?.[5]),
+    formatValueForCsv(row?.[3], row?.[5]),
     row?.[6] ?? ''
   ]);
 }
 
-function preserveCoordinateValue(fieldName, value) {
+function formatValueForCsv(fieldName, value) {
+  const rawValue = value ?? '';
+  const stringValue = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue);
+
+  if (!stringValue) return '';
+
   if (isCoordinateField(fieldName)) {
-    const rawValue = value ?? '';
-    const stringValue = typeof rawValue === 'string' ? rawValue.trim() : String(rawValue);
-    if (!stringValue) return '';
-    // Prefijar con [ (sin cierre) para evitar interpretaciones numéricas sin usar el formato ="".
-    return `[${stringValue}`;
+    return formatDecimalWithComma(stringValue);
   }
 
-  return value ?? '';
+  if (isNumericWithDot(stringValue)) {
+    return formatDecimalWithComma(stringValue);
+  }
+
+  return stringValue;
 }
 
 function isCoordinateField(fieldName) {
   if (!fieldName) return false;
   const normalized = String(fieldName).toLowerCase();
   return normalized.includes('latitud') || normalized.includes('longitud');
+}
+
+function isNumericWithDot(value) {
+  if (value.includes(',')) return false;
+  return /^-?\d+(?:\.\d+)?$/.test(value);
+}
+
+function formatDecimalWithComma(value) {
+  return value.replace('.', ',');
 }
 
 export function escapeCsvValue(value) {
