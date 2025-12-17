@@ -194,3 +194,7 @@
 - El buscador de localidades valida que Nominatim devuelva coordenadas y bounding box válidos antes de centrar el mapa,
   evitando errores como "Cannot read properties of undefined (reading 'lat')" al pintar el marcador.
 - Si la localidad no tiene datos utilizables, se muestra un mensaje claro al usuario sin interrumpir el flujo del mapa.
+
+## Versión 1.9.9 - 2025-12-23
+- La exportación CSV de la transposición utiliza la coma como separador decimal en números, monedas y coordenadas.
+- Las coordenadas se exportan sin corchetes prefijados para mantener el formato simple solicitado.
