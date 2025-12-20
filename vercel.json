@@ -2,6 +2,9 @@
   "functions": {
     "api/points.ts": {
       "includeFiles": "backend/dist/**"
+    },
+    "api/catastro.ts": {
+      "includeFiles": "backend/dist/**"
     }
   },
   "outputDirectory": "frontend",

@@ -4,7 +4,7 @@ import {
   fetchNeighbourhoodBoundingBox,
   resolveCityFromBoundingBox
 } from '../services/nominatim';
-import { queryOverpassForNodes } from '../services/overpass';
+import { queryCatastroParcels } from '../services/catastro';
 import { BoundingBox } from '../types';
 import { parseBoundingBox } from '../utils/boundingBox';
 
@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
   const boundingBox = parseBoundingBox(req.query);
   const startedAt = Date.now();
 
-  console.info('[api/points] Received request', {
+  console.info('[api/catastro] Received request', {
     city,
     neighbourhood,
     limit,
@@ -36,9 +36,9 @@ router.get('/', async (req, res) => {
   });
 
   if (!city && !boundingBox) {
-    return res
-      .status(400)
-      .json({ error: 'Debes indicar un municipio o dibujar un área (bbox) para buscar puntos.' });
+    return res.status(400).json({
+      error: 'Debes indicar un municipio o dibujar un área (bbox) para buscar puntos en Catastro.'
+    });
   }
 
   try {
@@ -54,12 +54,12 @@ router.get('/', async (req, res) => {
       if (!resolvedCity) {
         try {
           resolvedCity = await resolveCityFromBoundingBox(boundingBox);
-          console.info('[api/points] City inferred from bounding box', {
+          console.info('[api/catastro] City inferred from bounding box', {
             resolvedCity,
             boundingBox
           });
         } catch (error) {
-          console.warn('[api/points] Could not resolve city from bounding box', {
+          console.warn('[api/catastro] Could not resolve city from bounding box', {
             message: error instanceof Error ? error.message : 'Unknown error'
           });
         }
@@ -67,7 +67,7 @@ router.get('/', async (req, res) => {
     } else {
       const cityInfo = await fetchCityBoundingBox(city);
 
-      console.info('[api/points] City resolved', {
+      console.info('[api/catastro] City resolved', {
         requestedCity: city,
         resolvedCity: cityInfo.city,
         boundingBox: cityInfo.boundingBox
@@ -77,7 +77,7 @@ router.get('/', async (req, res) => {
       resolvedCity = cityInfo.city;
 
       if (neighbourhood) {
-        console.info('[api/points] Resolving neighbourhood', {
+        console.info('[api/catastro] Resolving neighbourhood', {
           city: cityInfo.city,
           neighbourhood
         });
@@ -85,12 +85,12 @@ router.get('/', async (req, res) => {
         if (areaBox) {
           searchBoundingBox = areaBox;
           resolvedNeighbourhood = neighbourhood;
-          console.info('[api/points] Neighbourhood bounding box applied', {
+          console.info('[api/catastro] Neighbourhood bounding box applied', {
             neighbourhood,
             boundingBox: areaBox
           });
         } else {
-          console.warn('[api/points] Neighbourhood not found, using city bounding box', {
+          console.warn('[api/catastro] Neighbourhood not found, using city bounding box', {
             neighbourhood,
             city: cityInfo.city
           });
@@ -98,12 +98,12 @@ router.get('/', async (req, res) => {
       }
     }
 
-    console.info('[api/points] Querying Overpass', {
+    console.info('[api/catastro] Querying Catastro', {
       limit,
       boundingBox: searchBoundingBox
     });
 
-    const { totalAvailable, points } = await queryOverpassForNodes(searchBoundingBox, limit);
+    const { totalAvailable, points } = await queryCatastroParcels(searchBoundingBox, limit);
 
     const payload = {
       city: resolvedCity,
@@ -117,7 +117,7 @@ router.get('/', async (req, res) => {
 
     const durationMs = Date.now() - startedAt;
 
-    console.info('[api/points] Response ready', {
+    console.info('[api/catastro] Response ready', {
       city: payload.city,
       neighbourhood: payload.neighbourhood,
       returned: payload.returned,
@@ -129,11 +129,11 @@ router.get('/', async (req, res) => {
     return res.json(payload);
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : 'No se pudo completar la búsqueda de puntos';
+      error instanceof Error ? error.message : 'No se pudo completar la búsqueda en Catastro';
 
     const durationMs = Date.now() - startedAt;
 
-    console.error('[api/points] Error while resolving request', {
+    console.error('[api/catastro] Error while resolving request', {
       city,
       neighbourhood,
       limit,

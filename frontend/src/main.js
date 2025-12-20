@@ -1,4 +1,10 @@
-import { fetchPoints, fetchPointsInBoundingBox, searchLocation } from './api.js';
+import {
+  fetchPoints,
+  fetchPointsInBoundingBox,
+  searchLocation,
+  fetchCatastroPoints,
+  fetchCatastroPointsInBoundingBox
+} from './api.js';
 import {
   clearResults,
   renderMeta,
@@ -29,10 +35,12 @@ const neighbourhoodInput = document.getElementById('neighbourhood');
 const limitInput = document.getElementById('limit');
 const mapLimitInput = document.getElementById('map-limit');
 const exportButton = document.getElementById('export-btn');
+const catastroButton = document.getElementById('catastro-btn');
 const areaMapContainer = document.getElementById('area-map');
 const drawAreaButton = document.getElementById('draw-area-btn');
 const resetAreaButton = document.getElementById('reset-area-btn');
 const searchAreaButton = document.getElementById('search-area-btn');
+const searchAreaCatastroButton = document.getElementById('search-area-catastro-btn');
 const areaSearchInput = document.getElementById('area-search');
 const areaSearchButton = document.getElementById('area-search-btn');
 const areaSearchSlot = document.getElementById('area-search-slot');
@@ -178,7 +186,7 @@ const mergePointsById = (currentPoints, incomingPoints = []) => {
   return Array.from(registry.values());
 };
 
-const fetchPointsInBatches = async ({ limit, requestFactory }) => {
+const fetchPointsInBatches = async ({ limit, requestFactory, sourceLabel = 'OpenStreetMap' }) => {
   const safeLimit = Math.max(1, Math.min(limit, MAX_LIMIT));
   const plannedBatches = Math.max(1, Math.ceil(safeLimit / BATCH_SIZE));
   let collectedPoints = [];
@@ -196,7 +204,7 @@ const fetchPointsInBatches = async ({ limit, requestFactory }) => {
     if (remaining <= 0) break;
 
     setStatus(
-      `Buscando puntos en OpenStreetMap... (bloque ${batchIndex + 1}/${plannedBatches})`,
+      `Buscando puntos en ${sourceLabel}... (bloque ${batchIndex + 1}/${plannedBatches})`,
       false,
       { loading: true }
     );
@@ -724,6 +732,38 @@ if (searchAreaButton) {
   });
 }
 
+if (searchAreaCatastroButton) {
+  searchAreaCatastroButton.addEventListener('click', () => {
+    if (searchMode !== 'map') {
+      setStatus('Selecciona "Con mapa" para buscar dibujando un área.', true);
+      return;
+    }
+    performCatastroAreaSearch();
+  });
+}
+
+if (catastroButton) {
+  catastroButton.addEventListener('click', () => {
+    if (searchMode !== 'city') {
+      setStatus('Activa "Indicar población" para buscar Catastro por municipio.', true);
+      return;
+    }
+
+    const city = cityInput.value.trim();
+    if (!city) {
+      setStatus('Introduce un municipio para buscar en Catastro.', true);
+      return;
+    }
+
+    if (!hasBaseColumnsConfig()) {
+      openBaseColumnsModal();
+      return;
+    }
+
+    performCatastroSearch();
+  });
+}
+
 if (areaSearchButton) {
   areaSearchButton.addEventListener('click', () => {
     focusOnSearchedLocation();
@@ -1027,14 +1067,14 @@ function finalizePolygon() {
   mapInstance.fitBounds(areaBounds, { padding: [20, 20] });
 
   showBoundingBoxStatus(convertBoundsToBoundingBox(areaBounds), 'Área preparada (polígono)');
-  setAreaStatus('Área cerrada. Pulsa "Buscar en área" para obtener puntos.');
+  setAreaStatus('Área cerrada. Pulsa "Buscar en área" o "Catastro en área" para obtener puntos.');
   if (areaMapContainer) {
     areaMapContainer.classList.remove('drawing');
   }
   renderAreaCoordinates(polygonVertices);
   markStepAsActive(
     orderedStepPanels[2],
-    'Área cerrada. Pulsa "Buscar en área" para pintar los puntos en el mapa.'
+    'Área cerrada. Pulsa "Buscar en área" o "Catastro en área" para pintar los puntos en el mapa.'
   );
 }
 
@@ -1098,5 +1138,121 @@ async function performAreaSearch() {
   } catch (error) {
     setStatus(error.message || 'No se pudo obtener puntos', true, { loading: false });
     setAreaStatus('No se pudo obtener puntos para el área seleccionada.', true);
+  }
+}
+
+async function performCatastroSearch() {
+  clearResults();
+
+  const city = cityInput.value.trim();
+  const neighbourhood = neighbourhoodInput.value.trim();
+  const limit = getActiveLimit();
+
+  if (!city) {
+    setStatus('Introduce un municipio para buscar en Catastro.', true);
+    return;
+  }
+
+  try {
+    markStepAsActive(
+      orderedStepPanels[1],
+      'Buscando puntos en Catastro por municipio y preparando el siguiente bloque de mapa.'
+    );
+    markStepAsActive(
+      orderedStepPanels[2],
+      'Llegarán los puntos de Catastro en bloques. Se irán pintando en cuanto estén listos.'
+    );
+    const data = await fetchPointsInBatches({
+      limit,
+      sourceLabel: 'Catastro',
+      requestFactory: (chunkLimit) =>
+        fetchCatastroPoints({ city, neighbourhood, limit: chunkLimit })
+    });
+
+    lastPointsData = data;
+    mockPoints = [];
+    renderMeta({
+      city: data.city,
+      neighbourhood: data.neighbourhood,
+      totalAvailable: data.totalAvailable,
+      returned: data.returned,
+      boundingBox: data.boundingBox
+    });
+    renderPoints(data.points);
+    plotPointsOnMap(data.points);
+    markStepAsDone(
+      orderedStepPanels[1],
+      'Consulta por municipio en Catastro completada y puntos pintados en el mapa.'
+    );
+    markStepAsDone(
+      orderedStepPanels[2],
+      'Puntos de Catastro obtenidos. Los resultados están listos para enriquecer o transponer.'
+    );
+  } catch (error) {
+    setStatus(error.message || 'No se pudo obtener puntos de Catastro', true, { loading: false });
+  }
+}
+
+async function performCatastroAreaSearch() {
+  if (!areaBounds) {
+    setAreaStatus('Dibuja y cierra un polígono en el mapa antes de buscar.', true);
+    setStatus('Selecciona un área para buscar puntos en Catastro.', true);
+    return;
+  }
+
+  const limit = getActiveLimit();
+  const bbox = [
+    areaBounds.getSouth(),
+    areaBounds.getWest(),
+    areaBounds.getNorth(),
+    areaBounds.getEast()
+  ];
+
+  setAreaStatus('Consultando el área en Catastro en bloques de 100 puntos para evitar bloqueos...');
+  markStepAsActive(
+    orderedStepPanels[1],
+    'Consultando el área dibujada en Catastro y recogiendo puntos en bloques.'
+  );
+  markStepAsActive(
+    orderedStepPanels[2],
+    'Pintaremos los puntos de Catastro a medida que lleguen los resultados.'
+  );
+
+  try {
+    const data = await fetchPointsInBatches({
+      limit,
+      sourceLabel: 'Catastro',
+      requestFactory: (chunkLimit) =>
+        fetchCatastroPointsInBoundingBox({ bbox, limit: chunkLimit, city: cityInput.value.trim() })
+    });
+
+    lastPointsData = data;
+    mockPoints = [];
+    renderMeta({
+      city: data.city,
+      neighbourhood: data.neighbourhood,
+      totalAvailable: data.totalAvailable,
+      returned: data.returned,
+      areaLabel: data.areaLabel ? `${data.areaLabel} · Catastro` : 'Área seleccionada · Catastro',
+      boundingBox: data.boundingBox
+    });
+    renderPoints(data.points);
+    plotPointsOnMap(data.points);
+    if (data.boundingBox) {
+      showBoundingBoxStatus(data.boundingBox, 'Resultados de Catastro cargados en el área');
+    } else {
+      setAreaStatus('Resultados de Catastro cargados. Puedes volver a dibujar para refinar.');
+    }
+    markStepAsDone(
+      orderedStepPanels[1],
+      'Área consultada en Catastro y puntos dibujados en el mapa.'
+    );
+    markStepAsDone(
+      orderedStepPanels[2],
+      'Área consultada en Catastro. Los puntos obtenidos se han dibujado en el mapa.'
+    );
+  } catch (error) {
+    setStatus(error.message || 'No se pudo obtener puntos de Catastro', true, { loading: false });
+    setAreaStatus('No se pudo obtener puntos de Catastro para el área seleccionada.', true);
   }
 }

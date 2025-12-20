@@ -5,13 +5,15 @@ export type BoundingBox = {
   east: number;
 };
 
+export type PointSource = 'osm' | 'catastro';
+
 export type Point = {
   id: string;
   name: string | null;
   street: string | null;
   lat: number;
   lng: number;
-  source: 'osm';
+  source: PointSource;
 };
 
 export type CityLocation = {
