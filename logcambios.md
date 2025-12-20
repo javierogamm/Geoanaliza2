@@ -205,3 +205,7 @@
 - Se añaden botones específicos para solicitar puntos de Catastro tanto por municipio como por área dibujada, manteniendo
   el flujo de pintado y metadatos en la interfaz.
 - Se crea la función serverless de Vercel para `/api/catastro` y se reutiliza la utilería de bounding box en backend.
+
+## Versión 1.10.1 - 2025-12-24
+- El botón de Catastro aparece junto al de "Buscar puntos" y adopta un texto explícito para la búsqueda por municipio.
+- Se ajusta el alineado de los botones del formulario para mantenerlos en la misma fila cuando hay espacio disponible.

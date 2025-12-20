@@ -184,6 +184,11 @@ h1 {
   align-items: center;
 }
 
+.form-actions .btn,
+.form-actions .btn-secondary {
+  align-self: center;
+}
+
 .area-panel {
   display: flex;
   flex-direction: column;
