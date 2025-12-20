@@ -176,6 +176,14 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .area-panel {
   display: flex;
   flex-direction: column;

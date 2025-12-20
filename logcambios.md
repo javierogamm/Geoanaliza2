@@ -198,3 +198,10 @@
 ## Versión 1.9.9 - 2025-12-23
 - La exportación CSV de la transposición utiliza la coma como separador decimal en números, monedas y coordenadas.
 - Las coordenadas se exportan sin corchetes prefijados para mantener el formato simple solicitado.
+
+## Versión 1.10.0 - 2025-12-24
+- Se integra la consulta de Catastro mediante un nuevo endpoint `/api/catastro`, que obtiene parcelas dentro de la población
+  o el área dibujada y devuelve puntos aleatorios con centroides georreferenciados.
+- Se añaden botones específicos para solicitar puntos de Catastro tanto por municipio como por área dibujada, manteniendo
+  el flujo de pintado y metadatos en la interfaz.
+- Se crea la función serverless de Vercel para `/api/catastro` y se reutiliza la utilería de bounding box en backend.
