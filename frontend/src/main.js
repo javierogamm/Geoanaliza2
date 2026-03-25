@@ -16,7 +16,7 @@ import {
   hasBaseColumnsConfig,
   getBaseColumnsConfig
 } from './baseColumnsModal.js';
-import { initImportExcel, getExpedientesData, hasExpedientes } from './importExcel.js';
+import { initImportExcel, getExpedientesData, hasExpedientes, openImportExcelModal } from './importExcel.js';
 import { initImportCsv } from './importCsv.js';
 import { initTranspose, showTransposeButton } from './transposeData.js';
 import { addCustomColumn, getCustomColumns, removeCustomColumn } from './columnManager.js';
@@ -542,7 +542,7 @@ renderThesaurusBoard();
 
 initSimplifiedTransposeView({
   onOpenImportExpedientes: () => {
-    document.getElementById('import-excel-btn')?.click();
+    openImportExcelModal({ codesOnly: true });
   },
   onOpenAddColumn: () => {
     document.getElementById('add-column-btn')?.click();

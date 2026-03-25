@@ -193,7 +193,7 @@ function renderProgressTable(getProgressData) {
   rows.push({
     element: 'Expediente',
     detail: expedientes
-      ? `${escapeHtml(expedientes.name)} <small>(${expedientes.values?.length || 0} filas)</small>`
+      ? `Códigos cargados <small>(${expedientes.values?.length || 0} filas)</small>`
       : 'Sin importar todavía.',
     status: expedientes ? { label: 'Importado', cls: 'simple-progress-status-ok' } : { label: 'Pendiente', cls: 'simple-progress-status-pending' }
   });
@@ -271,7 +271,7 @@ export function initSimplifiedTransposeView({
 
     if (action === 'import-expedientes') {
       onOpenImportExpedientes?.();
-      setStatus('Paso 1 abierto: importa el Excel de expedientes.', 'ok');
+      setStatus('Paso 1 abierto: importa el Excel con los códigos de expediente.', 'ok');
       return;
     }
 

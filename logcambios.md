@@ -1,5 +1,10 @@
 # Log de cambios
 
+## Versión 2.0.3 - 2026-03-25
+- En la vista simplificada, el paso 1 de importación de expedientes pasa a modo **solo códigos**: oculta nombre/referencia de tesauro y toma directamente los códigos del Excel seleccionado.
+- Se fija internamente la importación simplificada de expedientes como `Código expediente` con referencia `expediente`, evitando configurar un tesauro manual en ese primer paso.
+- Se ajusta el seguimiento simplificado para reflejar explícitamente que se están cargando códigos de expediente y no un tesauro adicional.
+
 ## Versión 2.0.2 - 2026-03-25
 - En la vista simplificada, la pregunta 3 ahora gobierna el flujo: si se marca **Sí** se muestra el paso para cargar Excel/CSV y si se marca **No** se oculta ese paso y se despliega visualmente el paso 4 para creación manual.
 - Se añade una tabla de seguimiento en tiempo real en la vista simplificada para ver, según se importa, el estado de expediente, nuevas columnas CSV, tesauros creados manualmente y tesauros base asignados.

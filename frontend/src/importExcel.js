@@ -7,6 +7,8 @@ const fileInput = document.getElementById('excel-file');
 const columnSelect = document.getElementById('column-select');
 const nameInput = document.getElementById('expediente-name');
 const referenceInput = document.getElementById('expediente-reference');
+const nameField = nameInput?.closest('.field');
+const referenceField = referenceInput?.closest('.field');
 
 // Datos del Excel cargado
 let excelData = null;
@@ -14,6 +16,7 @@ let excelHeaders = [];
 
 // Datos de expedientes importados
 let expedientesData = null;
+let importMode = 'standard';
 
 // Callback que se ejecuta cuando se importan expedientes
 let onImportedCallback = null;
@@ -22,7 +25,7 @@ export function initImportExcel(onImported) {
   onImportedCallback = onImported;
 
   // Abrir modal
-  openBtn.addEventListener('click', openModal);
+  openBtn.addEventListener('click', () => openModal());
 
   // Cerrar modal
   closeBtn.addEventListener('click', closeModal);
@@ -38,9 +41,11 @@ export function initImportExcel(onImported) {
   form.addEventListener('submit', handleFormSubmit);
 }
 
-function openModal() {
+function openModal(options = {}) {
+  importMode = options.mode || 'standard';
   modal.classList.add('active');
   resetForm();
+  updateModeUI();
 }
 
 function closeModal() {
@@ -54,6 +59,20 @@ function resetForm() {
   excelHeaders = [];
   columnSelect.innerHTML = '<option value="">Primero carga un archivo...</option>';
   columnSelect.disabled = true;
+  nameInput.value = 'Expediente';
+  referenceInput.value = 'expediente';
+}
+
+function updateModeUI() {
+  const isCodesOnlyMode = importMode === 'codes-only';
+  if (nameField) nameField.classList.toggle('is-hidden', isCodesOnlyMode);
+  if (referenceField) referenceField.classList.toggle('is-hidden', isCodesOnlyMode);
+  if (nameInput) nameInput.required = !isCodesOnlyMode;
+  if (referenceInput) referenceInput.required = !isCodesOnlyMode;
+}
+
+export function openImportExcelModal({ codesOnly = false } = {}) {
+  openModal({ mode: codesOnly ? 'codes-only' : 'standard' });
 }
 
 async function handleFileUpload(e) {
@@ -131,8 +150,9 @@ function handleFormSubmit(e) {
     return;
   }
 
-  const name = nameInput.value.trim();
-  const reference = referenceInput.value.trim();
+  const isCodesOnlyMode = importMode === 'codes-only';
+  const name = isCodesOnlyMode ? 'Código expediente' : nameInput.value.trim();
+  const reference = isCodesOnlyMode ? 'expediente' : referenceInput.value.trim();
 
   if (!name || !reference) {
     alert('Por favor, completa todos los campos obligatorios');
