@@ -1,5 +1,10 @@
 # Log de cambios
 
+## Versión 2.0.4 - 2026-03-25
+- Se corrige la tabla de seguimiento de la vista simplificada para mostrar **un único camino** según la opción elegida: o tesauros importados desde Excel/CSV, o tesauros creados manualmente.
+- Se elimina la situación de estados simultáneos confusos en filas no aplicables (por ejemplo, “Pendiente” en importación CSV cuando el flujo activo es creación manual).
+- Se mantiene que la importación de expedientes en simplificada solo carga códigos y no añade automáticamente un tesauro adicional en ese paso.
+
 ## Versión 2.0.3 - 2026-03-25
 - En la vista simplificada, el paso 1 de importación de expedientes pasa a modo **solo códigos**: oculta nombre/referencia de tesauro y toma directamente los códigos del Excel seleccionado.
 - Se fija internamente la importación simplificada de expedientes como `Código expediente` con referencia `expediente`, evitando configurar un tesauro manual en ese primer paso.

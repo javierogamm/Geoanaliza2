@@ -189,6 +189,7 @@ function renderProgressTable(getProgressData) {
   const baseColumns = data.baseColumns;
 
   const rows = [];
+  const useImportedDataset = hasDatasetFile();
 
   rows.push({
     element: 'Expediente',
@@ -199,26 +200,29 @@ function renderProgressTable(getProgressData) {
   });
 
   const csvColumns = customColumns.filter((column) => column.type === 'csv');
-  rows.push({
-    element: 'Nuevas columnas',
-    detail: csvColumns.length
-      ? csvColumns.map((column) => `<div>${escapeHtml(column.name)} <small>(${escapeHtml(column.reference)})</small></div>`).join('')
-      : 'Sin columnas importadas desde Excel/CSV.',
-    status: csvColumns.length
-      ? { label: `${csvColumns.length} creadas`, cls: 'simple-progress-status-ok' }
-      : { label: 'Pendiente', cls: 'simple-progress-status-pending' }
-  });
-
   const nonCsvColumns = customColumns.filter((column) => column.type !== 'csv');
-  rows.push({
-    element: 'Nuevos tesauros creados',
-    detail: nonCsvColumns.length
-      ? nonCsvColumns.map((column) => `<div>${escapeHtml(column.name)} <small>(${escapeHtml(column.reference)} · ${escapeHtml(column.type)})</small></div>`).join('')
-      : 'Sin tesauros manuales todavía.',
-    status: nonCsvColumns.length
-      ? { label: `${nonCsvColumns.length} activos`, cls: 'simple-progress-status-ok' }
-      : { label: 'Pendiente', cls: 'simple-progress-status-pending' }
-  });
+
+  if (useImportedDataset) {
+    rows.push({
+      element: 'Tesauros desde Excel/CSV',
+      detail: csvColumns.length
+        ? csvColumns.map((column) => `<div>${escapeHtml(column.name)} <small>(${escapeHtml(column.reference)})</small></div>`).join('')
+        : 'Sin columnas importadas desde Excel/CSV.',
+      status: csvColumns.length
+        ? { label: `${csvColumns.length} creadas`, cls: 'simple-progress-status-ok' }
+        : { label: 'Pendiente', cls: 'simple-progress-status-pending' }
+    });
+  } else {
+    rows.push({
+      element: 'Tesauros creados manualmente',
+      detail: nonCsvColumns.length
+        ? nonCsvColumns.map((column) => `<div>${escapeHtml(column.name)} <small>(${escapeHtml(column.reference)} · ${escapeHtml(column.type)})</small></div>`).join('')
+        : 'Sin tesauros manuales todavía.',
+      status: nonCsvColumns.length
+        ? { label: `${nonCsvColumns.length} activos`, cls: 'simple-progress-status-ok' }
+        : { label: 'Pendiente', cls: 'simple-progress-status-pending' }
+    });
+  }
 
   rows.push({
     element: 'Tesauros base asignados',
