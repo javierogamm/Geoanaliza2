@@ -1,5 +1,10 @@
 # Log de cambios
 
+## Versión 2.0.0 - 2026-03-25
+- Se añade en la parte superior una **vista simplificada de transposición** con un flujo guiado de 5 pasos: importar expedientes, indicar si existe fichero de datos por expediente, cargar ese fichero si aplica, crear datos manuales y lanzar la exportación transpuesta.
+- La vista simplificada permite importar de una sola vez columnas desde **CSV/XLSX/XLS** (una fila por expediente y una columna por dato), creando automáticamente tesauros tipo `csv` para reutilizarlos en la transposición.
+- La transposición deja de incluir latitud/longitud en la selección de campos para operar en modo reducido sin coordenadas, manteniendo el formato de exportación CSV existente.
+
 ## Versión 1.0.0 - 2025-02-03
 - Añadida configuración de `vercel.json` en la raíz para reescribir todas las rutas hacia el frontend estático y proxy de `/api` al backend hospedado en Render, evitando errores 404 en el despliegue de Vercel.
 

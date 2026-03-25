@@ -22,6 +22,7 @@ import { initTranspose, showTransposeButton } from './transposeData.js';
 import { addCustomColumn, getCustomColumns, removeCustomColumn } from './columnManager.js';
 import { initCreateExpedients } from './createExpedients.js';
 import { initThesaurusDetector, getPendingThesaurusExtra } from './thesaurusDetector.js';
+import { initSimplifiedTransposeView } from './simplifiedTransposeView.js';
 
 const form = document.getElementById('search-form');
 const cityInput = document.getElementById('city');
@@ -517,6 +518,24 @@ initCreateExpedients();
 initThesaurusDetector({ refreshTable: refreshTableWithCurrentData });
 registerDetectedExtraProvider(() => getPendingThesaurusExtra());
 renderThesaurusBoard();
+
+initSimplifiedTransposeView({
+  onOpenImportExpedientes: () => {
+    document.getElementById('import-excel-btn')?.click();
+  },
+  onOpenAddColumn: () => {
+    document.getElementById('add-column-btn')?.click();
+  },
+  onOpenTranspose: () => {
+    document.getElementById('transpose-btn')?.click();
+  },
+  onColumnsImported: () => {
+    renderThesaurusBoard();
+  },
+  onRefreshData: () => {
+    refreshTableWithCurrentData();
+  }
+});
 
 document.addEventListener('thesaurus-workflow-start', () => {
   markStepAsActive(
