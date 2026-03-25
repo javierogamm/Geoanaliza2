@@ -93,6 +93,53 @@ h1 {
   margin-top: 14px;
 }
 
+.simple-progress {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.simple-progress h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.simple-progress-table-wrapper {
+  overflow-x: auto;
+}
+
+.simple-progress-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+.simple-progress-table th,
+.simple-progress-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.simple-progress-table th {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.simple-progress-table td small {
+  color: var(--muted);
+}
+
+.simple-progress-table .simple-progress-status-ok {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.simple-progress-table .simple-progress-status-pending {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
 .simple-flow-status[data-tone='ok'] {
   color: #34d399;
 }

@@ -1,6 +1,5 @@
 import { getExpedientesData } from './importExcel.js';
 import { formatCellValue, getCustomColumns } from './columnManager.js';
-import { getBaseColumnsConfig } from './baseColumnsModal.js';
 import { buildTransposedCsvContent } from './transposedExport.js';
 
 const modal = document.getElementById('transpose-modal');
@@ -22,16 +21,13 @@ const closeSelectFieldsBtn = document.getElementById('close-select-fields-modal'
 const cancelSelectFieldsBtn = document.getElementById('cancel-select-fields');
 const baseFieldsCheckboxes = document.getElementById('base-fields-checkboxes');
 const customFieldsCheckboxes = document.getElementById('custom-fields-checkboxes');
+const baseFieldsSection = baseFieldsCheckboxes?.closest('.field');
 
 // Datos transpuestos
 let transposedData = null;
 let currentPoints = null;
 let currentCustomColumnsData = null;
 let selectedFields = null;
-
-const defaultBaseColumnsConfig = {
-  street: { name: 'Dirección', reference: 'direccion' }
-};
 
 export function initTranspose(getCurrentPoints, getCustomColumnsData) {
   // Mostrar/ocultar botón según haya expedientes
@@ -93,28 +89,9 @@ function showFieldSelectionModal() {
   // Limpiar checkboxes
   baseFieldsCheckboxes.innerHTML = '';
   customFieldsCheckboxes.innerHTML = '';
-
-  // Añadir checkboxes para columnas base
-  const baseConfig = getEffectiveBaseConfig();
-  ['street'].forEach((field) => {
-    const checkboxItem = document.createElement('div');
-    checkboxItem.className = 'checkbox-item';
-
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.id = `field-base-${field}`;
-    checkbox.value = field;
-    checkbox.name = 'base-field';
-    checkbox.checked = true; // Por defecto activado
-
-    const label = document.createElement('label');
-    label.htmlFor = `field-base-${field}`;
-    label.textContent = baseConfig[field].name;
-
-    checkboxItem.appendChild(checkbox);
-    checkboxItem.appendChild(label);
-    baseFieldsCheckboxes.appendChild(checkboxItem);
-  });
+  if (baseFieldsSection) {
+    baseFieldsSection.classList.add('is-hidden');
+  }
 
   // Añadir checkboxes para columnas personalizadas
   const customColumns = getCustomColumns();
@@ -146,30 +123,20 @@ function closeSelectFieldsModal() {
   selectFieldsModal.classList.remove('active');
 }
 
-function getEffectiveBaseConfig() {
-  const baseConfig = getBaseColumnsConfig();
-  return baseConfig ?? defaultBaseColumnsConfig;
-}
-
 function handleFieldSelection() {
   // Recoger campos seleccionados
-  const baseFields = [];
   const customFields = [];
-
-  baseFieldsCheckboxes.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
-    baseFields.push(checkbox.value);
-  });
 
   customFieldsCheckboxes.querySelectorAll('input[type="checkbox"]:checked').forEach((checkbox) => {
     customFields.push(checkbox.value);
   });
 
-  if (baseFields.length === 0 && customFields.length === 0) {
+  if (customFields.length === 0) {
     alert('Debes seleccionar al menos un campo para transponer');
     return;
   }
 
-  selectedFields = { baseFields, customFields };
+  selectedFields = { customFields };
 
   // Cerrar modal de selección
   closeSelectFieldsModal();
@@ -192,7 +159,6 @@ function transposeAndShow() {
 }
 
 function generateTransposedData(points, customColumnsData, expedientes, selectedFields) {
-  const baseConfig = getEffectiveBaseConfig();
   const customColumns = getCustomColumns();
   const expedientesValues = expedientes?.values || [];
 
@@ -212,26 +178,9 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
 
   points.forEach((point, index) => {
     const expedienteValue = expedientesValues[index] ?? point.expedienteValue ?? '';
-    const hasBaseFields = selectedFields.baseFields.length > 0;
     const hasCustomFields = selectedFields.customFields.length > 0;
 
-    if (!hasBaseFields && !hasCustomFields) return;
-
-    // Para cada columna base seleccionada, crear una fila
-    if (hasBaseFields) {
-      if (selectedFields.baseFields.includes('street')) {
-        rows.push([
-          expedienteValue,
-          '', // Nombre tarea (se rellenará al exportar)
-          'Sí', // Crear tarea
-          baseConfig.street.name,
-          'Texto',
-          point.street || '',
-          '' // Valor campo adicional
-        ]);
-      }
-
-    }
+    if (!hasCustomFields) return;
 
     // Para cada columna personalizada seleccionada, crear una fila
     const pointData = customColumnsData.get(point.id);

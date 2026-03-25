@@ -6,6 +6,9 @@ const hasDatasetRadios = document.querySelectorAll('input[name="simple-has-datas
 const uploadDatasetBtn = document.getElementById('simple-upload-dataset-btn');
 const addColumnBtn = document.getElementById('simple-add-column-btn');
 const transposeBtn = document.getElementById('simple-open-transpose-btn');
+const step3Item = document.getElementById('simple-step-3');
+const step4Item = document.getElementById('simple-step-4');
+const progressBody = document.getElementById('simple-progress-body');
 
 const fileInput = document.getElementById('simple-dataset-file');
 
@@ -108,13 +111,13 @@ function parseExcel(arrayBuffer) {
 
 function importColumns(dataset) {
   const existingReferences = new Set(getCustomColumns().map((column) => column.reference));
-  let importedCount = 0;
+  const importedColumns = [];
 
   dataset.headers.forEach((header, index) => {
     const values = dataset.valuesByColumn[index] || [];
     if (!values.some((value) => String(value).trim() !== '')) return;
 
-    let baseReference = slugify(header);
+    const baseReference = slugify(header);
     let reference = baseReference;
     let suffix = 2;
     while (existingReferences.has(reference)) {
@@ -124,7 +127,7 @@ function importColumns(dataset) {
 
     existingReferences.add(reference);
 
-    addCustomColumn({
+    const createdColumn = addCustomColumn({
       name: header,
       reference,
       type: 'csv',
@@ -133,10 +136,10 @@ function importColumns(dataset) {
       }
     });
 
-    importedCount += 1;
+    importedColumns.push(createdColumn);
   });
 
-  return importedCount;
+  return importedColumns;
 }
 
 function hasDatasetFile() {
@@ -152,20 +155,106 @@ async function handleDatasetFile(file, onColumnsImported) {
   if (lowerName.endsWith('.csv')) {
     const text = await file.text();
     const dataset = parseCsv(text);
-    const imported = importColumns(dataset);
-    onColumnsImported?.();
-    return imported;
+    const importedColumns = importColumns(dataset);
+    onColumnsImported?.(importedColumns);
+    return importedColumns;
   }
 
   if (lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls')) {
     const buffer = await file.arrayBuffer();
     const dataset = parseExcel(buffer);
-    const imported = importColumns(dataset);
-    onColumnsImported?.();
-    return imported;
+    const importedColumns = importColumns(dataset);
+    onColumnsImported?.(importedColumns);
+    return importedColumns;
   }
 
   throw new Error('Formato no soportado. Usa CSV, XLSX o XLS.');
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderProgressTable(getProgressData) {
+  if (!progressBody) return;
+
+  const data = getProgressData?.() || {};
+  const expedientes = data.expedientes;
+  const customColumns = data.customColumns || [];
+  const baseColumns = data.baseColumns;
+
+  const rows = [];
+  const useImportedDataset = hasDatasetFile();
+
+  rows.push({
+    element: 'Expediente',
+    detail: expedientes
+      ? `Códigos cargados <small>(${expedientes.values?.length || 0} filas)</small>`
+      : 'Sin importar todavía.',
+    status: expedientes ? { label: 'Importado', cls: 'simple-progress-status-ok' } : { label: 'Pendiente', cls: 'simple-progress-status-pending' }
+  });
+
+  const csvColumns = customColumns.filter((column) => column.type === 'csv');
+  const nonCsvColumns = customColumns.filter((column) => column.type !== 'csv');
+
+  if (useImportedDataset) {
+    rows.push({
+      element: 'Tesauros desde Excel/CSV',
+      detail: csvColumns.length
+        ? csvColumns.map((column) => `<div>${escapeHtml(column.name)} <small>(${escapeHtml(column.reference)})</small></div>`).join('')
+        : 'Sin columnas importadas desde Excel/CSV.',
+      status: csvColumns.length
+        ? { label: `${csvColumns.length} creadas`, cls: 'simple-progress-status-ok' }
+        : { label: 'Pendiente', cls: 'simple-progress-status-pending' }
+    });
+  } else {
+    rows.push({
+      element: 'Tesauros creados manualmente',
+      detail: nonCsvColumns.length
+        ? nonCsvColumns.map((column) => `<div>${escapeHtml(column.name)} <small>(${escapeHtml(column.reference)} · ${escapeHtml(column.type)})</small></div>`).join('')
+        : 'Sin tesauros manuales todavía.',
+      status: nonCsvColumns.length
+        ? { label: `${nonCsvColumns.length} activos`, cls: 'simple-progress-status-ok' }
+        : { label: 'Pendiente', cls: 'simple-progress-status-pending' }
+    });
+  }
+
+  rows.push({
+    element: 'Tesauros base asignados',
+    detail: baseColumns
+      ? `<div>Dirección: <small>${escapeHtml(baseColumns.street?.name)} (${escapeHtml(baseColumns.street?.reference)})</small></div>
+         <div>Latitud: <small>${escapeHtml(baseColumns.lat?.name)} (${escapeHtml(baseColumns.lat?.reference)})</small></div>
+         <div>Longitud: <small>${escapeHtml(baseColumns.lng?.name)} (${escapeHtml(baseColumns.lng?.reference)})</small></div>`
+      : 'Sin configuración explícita (se usarán valores por defecto).',
+    status: baseColumns ? { label: 'Asignados', cls: 'simple-progress-status-ok' } : { label: 'Por defecto', cls: 'simple-progress-status-pending' }
+  });
+
+  progressBody.innerHTML = rows
+    .map(
+      (row) => `<tr>
+        <td>${row.element}</td>
+        <td>${row.detail}</td>
+        <td><span class="${row.status.cls}">${row.status.label}</span></td>
+      </tr>`
+    )
+    .join('');
+}
+
+function syncSimpleStepsVisibility() {
+  const datasetEnabled = hasDatasetFile();
+
+  if (uploadDatasetBtn) uploadDatasetBtn.disabled = !datasetEnabled;
+  if (step3Item) step3Item.classList.toggle('is-hidden', !datasetEnabled);
+  if (step4Item) step4Item.classList.toggle('is-hidden', datasetEnabled);
+
+  if (!datasetEnabled) {
+    setStatus('Paso 3 omitido: se muestra el paso 4 para crear datos manuales.', 'neutral');
+  }
 }
 
 export function initSimplifiedTransposeView({
@@ -173,9 +262,12 @@ export function initSimplifiedTransposeView({
   onOpenAddColumn,
   onOpenTranspose,
   onColumnsImported,
-  onRefreshData
+  onRefreshData,
+  getProgressData
 }) {
   if (!wrapper) return;
+
+  renderProgressTable(getProgressData);
 
   wrapper.addEventListener('click', (event) => {
     const action = event.target?.dataset?.simpleAction;
@@ -183,7 +275,7 @@ export function initSimplifiedTransposeView({
 
     if (action === 'import-expedientes') {
       onOpenImportExpedientes?.();
-      setStatus('Paso 1 abierto: importa el Excel de expedientes.', 'ok');
+      setStatus('Paso 1 abierto: importa el Excel con los códigos de expediente.', 'ok');
       return;
     }
 
@@ -201,11 +293,8 @@ export function initSimplifiedTransposeView({
 
   hasDatasetRadios.forEach((radio) => {
     radio.addEventListener('change', () => {
-      const enabled = hasDatasetFile();
-      if (uploadDatasetBtn) uploadDatasetBtn.disabled = !enabled;
-      if (!enabled) {
-        setStatus('Paso 3 omitido: continúa en el paso 4 para crear datos manuales.', 'neutral');
-      }
+      syncSimpleStepsVisibility();
+      renderProgressTable(getProgressData);
     });
   });
 
@@ -223,9 +312,10 @@ export function initSimplifiedTransposeView({
     fileInput.addEventListener('change', async (event) => {
       const file = event.target.files?.[0];
       try {
-        const importedCount = await handleDatasetFile(file, onColumnsImported);
+        const importedColumns = await handleDatasetFile(file, onColumnsImported);
         onRefreshData?.();
-        setStatus(`Paso 3 completado: ${importedCount} columnas importadas desde ${file.name}.`, 'ok');
+        renderProgressTable(getProgressData);
+        setStatus(`Paso 3 completado: ${importedColumns.length} columnas importadas desde ${file.name}.`, 'ok');
       } catch (error) {
         setStatus(error.message || 'No se pudo importar el fichero.', 'error');
       } finally {
@@ -236,5 +326,12 @@ export function initSimplifiedTransposeView({
 
   if (addColumnBtn) addColumnBtn.disabled = false;
   if (transposeBtn) transposeBtn.disabled = false;
-  if (uploadDatasetBtn) uploadDatasetBtn.disabled = !hasDatasetFile();
+
+  const refreshProgress = () => renderProgressTable(getProgressData);
+  document.addEventListener('expedientes-imported', refreshProgress);
+  document.addEventListener('column-added', refreshProgress);
+  document.addEventListener('column-updated', refreshProgress);
+  document.addEventListener('thesaurus-validated', refreshProgress);
+
+  syncSimpleStepsVisibility();
 }

@@ -16,7 +16,7 @@ import {
   hasBaseColumnsConfig,
   getBaseColumnsConfig
 } from './baseColumnsModal.js';
-import { initImportExcel, getExpedientesData, hasExpedientes } from './importExcel.js';
+import { initImportExcel, getExpedientesData, hasExpedientes, openImportExcelModal } from './importExcel.js';
 import { initImportCsv } from './importCsv.js';
 import { initTranspose, showTransposeButton } from './transposeData.js';
 import { addCustomColumn, getCustomColumns, removeCustomColumn } from './columnManager.js';
@@ -502,6 +502,7 @@ initImportExcel((expedientes) => {
   );
   // Mostrar botón de transponer
   showTransposeButton();
+  document.dispatchEvent(new CustomEvent('expedientes-imported', { detail: { total: expedientes.values?.length || 0 } }));
 });
 
 // Inicializar el módulo de importación de CSV
@@ -541,7 +542,7 @@ renderThesaurusBoard();
 
 initSimplifiedTransposeView({
   onOpenImportExpedientes: () => {
-    document.getElementById('import-excel-btn')?.click();
+    openImportExcelModal({ codesOnly: true });
   },
   onOpenAddColumn: () => {
     document.getElementById('add-column-btn')?.click();
@@ -554,7 +555,12 @@ initSimplifiedTransposeView({
   },
   onRefreshData: () => {
     refreshTableWithCurrentData();
-  }
+  },
+  getProgressData: () => ({
+    expedientes: getExpedientesData(),
+    customColumns: getCustomColumns(),
+    baseColumns: getBaseColumnsConfig()
+  })
 });
 
 if (showSimplifiedViewButton) {
