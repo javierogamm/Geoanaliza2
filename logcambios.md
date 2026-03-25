@@ -1,5 +1,10 @@
 # Log de cambios
 
+## Versión 2.0.2 - 2026-03-25
+- En la vista simplificada, la pregunta 3 ahora gobierna el flujo: si se marca **Sí** se muestra el paso para cargar Excel/CSV y si se marca **No** se oculta ese paso y se despliega visualmente el paso 4 para creación manual.
+- Se añade una tabla de seguimiento en tiempo real en la vista simplificada para ver, según se importa, el estado de expediente, nuevas columnas CSV, tesauros creados manualmente y tesauros base asignados.
+- Se emite un evento al importar expedientes para refrescar automáticamente el seguimiento de la vista simplificada sin tocar el flujo inferior de transponer y exportar.
+
 ## Versión 2.0.1 - 2026-03-25
 - Se separan completamente las dos experiencias: la vista habitual y la vista simplificada ya no aparecen mezcladas en pantalla.
 - Se añade un botón en la cabecera para cambiar a vista simplificada; al activarla se oculta todo el flujo estándar y solo queda visible la funcionalidad reducida de transposición.

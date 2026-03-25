@@ -502,6 +502,7 @@ initImportExcel((expedientes) => {
   );
   // Mostrar botón de transponer
   showTransposeButton();
+  document.dispatchEvent(new CustomEvent('expedientes-imported', { detail: { total: expedientes.values?.length || 0 } }));
 });
 
 // Inicializar el módulo de importación de CSV
@@ -554,7 +555,12 @@ initSimplifiedTransposeView({
   },
   onRefreshData: () => {
     refreshTableWithCurrentData();
-  }
+  },
+  getProgressData: () => ({
+    expedientes: getExpedientesData(),
+    customColumns: getCustomColumns(),
+    baseColumns: getBaseColumnsConfig()
+  })
 });
 
 if (showSimplifiedViewButton) {

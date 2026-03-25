@@ -237,14 +237,14 @@
                 <label><input type="radio" name="simple-has-dataset" value="no" checked /> No</label>
               </div>
             </li>
-            <li>
+            <li id="simple-step-3">
               <strong>Si la respuesta es sí, cárgalo.</strong>
               <button id="simple-upload-dataset-btn" type="button" class="btn-secondary" disabled>
                 3) Cargar datos a transponer
               </button>
               <input id="simple-dataset-file" type="file" accept=".csv,.xlsx,.xls" hidden />
             </li>
-            <li>
+            <li id="simple-step-4">
               <strong>Si no, crea los datos manualmente.</strong>
               <button id="simple-add-column-btn" type="button" class="btn-secondary" data-simple-action="add-column">
                 4) Crear datos (tipos, selectores, pesos)
@@ -257,6 +257,25 @@
               </button>
             </li>
           </ol>
+          <div class="simple-progress">
+            <h3>Seguimiento de importaciones</h3>
+            <div class="simple-progress-table-wrapper">
+              <table class="simple-progress-table" id="simple-progress-table">
+                <thead>
+                  <tr>
+                    <th>Elemento</th>
+                    <th>Detalle</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="simple-progress-body">
+                  <tr>
+                    <td colspan="3" class="meta">Aún no hay importaciones en esta sesión.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
           <p id="simple-flow-status" class="meta simple-flow-status">
             Sigue los pasos para generar una transposición sin usar coordenadas.
           </p>
