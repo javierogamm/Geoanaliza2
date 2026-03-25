@@ -30,9 +30,7 @@ let currentCustomColumnsData = null;
 let selectedFields = null;
 
 const defaultBaseColumnsConfig = {
-  street: { name: 'Dirección', reference: 'direccion' },
-  lat: { name: 'Latitud', reference: 'latitud' },
-  lng: { name: 'Longitud', reference: 'longitud' }
+  street: { name: 'Dirección', reference: 'direccion' }
 };
 
 export function initTranspose(getCurrentPoints, getCustomColumnsData) {
@@ -98,7 +96,7 @@ function showFieldSelectionModal() {
 
   // Añadir checkboxes para columnas base
   const baseConfig = getEffectiveBaseConfig();
-  ['street', 'lat', 'lng'].forEach((field) => {
+  ['street'].forEach((field) => {
     const checkboxItem = document.createElement('div');
     checkboxItem.className = 'checkbox-item';
 
@@ -233,29 +231,6 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
         ]);
       }
 
-      if (selectedFields.baseFields.includes('lat')) {
-        rows.push([
-          expedienteValue,
-          '', // Nombre tarea
-          'Sí',
-          baseConfig.lat.name,
-          'Texto',
-          formatCoordinate(point.lat),
-          ''
-        ]);
-      }
-
-      if (selectedFields.baseFields.includes('lng')) {
-        rows.push([
-          expedienteValue,
-          '', // Nombre tarea
-          'Sí',
-          baseConfig.lng.name,
-          'Texto',
-          formatCoordinate(point.lng),
-          ''
-        ]);
-      }
     }
 
     // Para cada columna personalizada seleccionada, crear una fila
@@ -286,18 +261,6 @@ function generateTransposedData(points, customColumnsData, expedientes, selected
 function formatCellValueForTable(column, value) {
   const formatted = formatCellValue(column, value);
   return formatted ?? '';
-}
-
-function formatCoordinate(value) {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value.toString();
-  }
-
-  if (typeof value === 'string') {
-    return value.trim();
-  }
-
-  return '';
 }
 
 function renderTransposedTable(data) {

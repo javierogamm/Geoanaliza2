@@ -22,8 +22,14 @@
             Introduce un municipio y, opcionalmente, un barrio para obtener puntos geolocalizados desde
             OpenStreetMap.
           </p>
+          <div class="view-switch">
+            <button id="show-simplified-view-btn" type="button" class="btn-secondary">Vista simplificada</button>
+            <button id="show-standard-view-btn" type="button" class="btn-secondary is-hidden">Vista completa</button>
+          </div>
         </div>
       </header>
+
+      <section id="default-workflow-view">
 
       <section class="panel step-panel">
         <div class="step-header">
@@ -211,6 +217,50 @@
         </div>
         <div id="results-list" class="results-list" aria-live="polite"></div>
         <p class="attribution">Datos geográficos © OpenStreetMap contributors</p>
+      </section>
+      </section>
+
+      <section id="simplified-workflow-view" class="is-hidden">
+        <section id="simple-transpose-view" class="panel simple-view">
+          <h2>Vista simplificada: transponer datos</h2>
+          <ol class="simple-steps">
+            <li>
+              <strong>Pide el Excel de expedientes.</strong>
+              <button type="button" class="btn-secondary" data-simple-action="import-expedientes">
+                1) Cargar expedientes
+              </button>
+            </li>
+            <li>
+              <strong>¿Tienes Excel o CSV con una fila por expediente y una columna por dato?</strong>
+              <div class="simple-radios">
+                <label><input type="radio" name="simple-has-dataset" value="yes" /> Sí</label>
+                <label><input type="radio" name="simple-has-dataset" value="no" checked /> No</label>
+              </div>
+            </li>
+            <li>
+              <strong>Si la respuesta es sí, cárgalo.</strong>
+              <button id="simple-upload-dataset-btn" type="button" class="btn-secondary" disabled>
+                3) Cargar datos a transponer
+              </button>
+              <input id="simple-dataset-file" type="file" accept=".csv,.xlsx,.xls" hidden />
+            </li>
+            <li>
+              <strong>Si no, crea los datos manualmente.</strong>
+              <button id="simple-add-column-btn" type="button" class="btn-secondary" data-simple-action="add-column">
+                4) Crear datos (tipos, selectores, pesos)
+              </button>
+            </li>
+            <li>
+              <strong>Exporta el CSV transpuesto con el formato existente.</strong>
+              <button id="simple-open-transpose-btn" type="button" class="btn btn-transpose" data-simple-action="transpose">
+                5) Transponer y exportar
+              </button>
+            </li>
+          </ol>
+          <p id="simple-flow-status" class="meta simple-flow-status">
+            Sigue los pasos para generar una transposición sin usar coordenadas.
+          </p>
+        </section>
       </section>
 
       <!-- Modal para seleccionar campos a transponer -->
