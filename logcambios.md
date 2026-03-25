@@ -1,5 +1,10 @@
 # Log de cambios
 
+## Versión 2.0.5 - 2026-03-25
+- Se garantiza que al abrir “Importar expedientes” desde la vista simplificada, el modal entre siempre en modo **solo códigos** aunque se dispare con el botón general.
+- En ese contexto simplificado se ocultan de forma forzada “Nombre del tesauro” y “Referencia”, evitando pedir o crear un tesauro inicial en la carga de expedientes.
+- Se mantiene el modo estándar intacto para la vista completa.
+
 ## Versión 2.0.4 - 2026-03-25
 - Se corrige la tabla de seguimiento de la vista simplificada para mostrar **un único camino** según la opción elegida: o tesauros importados desde Excel/CSV, o tesauros creados manualmente.
 - Se elimina la situación de estados simultáneos confusos en filas no aplicables (por ejemplo, “Pendiente” en importación CSV cuando el flujo activo es creación manual).

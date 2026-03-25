@@ -9,6 +9,7 @@ const nameInput = document.getElementById('expediente-name');
 const referenceInput = document.getElementById('expediente-reference');
 const nameField = nameInput?.closest('.field');
 const referenceField = referenceInput?.closest('.field');
+const simplifiedWorkflowView = document.getElementById('simplified-workflow-view');
 
 // Datos del Excel cargado
 let excelData = null;
@@ -25,7 +26,10 @@ export function initImportExcel(onImported) {
   onImportedCallback = onImported;
 
   // Abrir modal
-  openBtn.addEventListener('click', () => openModal());
+  openBtn.addEventListener('click', () => {
+    const inSimplifiedMode = simplifiedWorkflowView && !simplifiedWorkflowView.classList.contains('is-hidden');
+    openModal({ mode: inSimplifiedMode ? 'codes-only' : 'standard' });
+  });
 
   // Cerrar modal
   closeBtn.addEventListener('click', closeModal);
