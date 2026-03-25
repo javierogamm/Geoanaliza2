@@ -1,5 +1,10 @@
 # Log de cambios
 
+## Versión 2.0.6 - 2026-03-25
+- La transposición deja de incluir el campo base de arriba (Dirección): se oculta el bloque “Columnas base” en el modal y ya no se generan filas base durante la transposición.
+- El modal de selección para transponer valida únicamente columnas personalizadas (tesauros traídos por CSV/Excel o creados manualmente).
+- Se mantiene que la carga inicial de expedientes en la vista simplificada no pide ni crea tesauro.
+
 ## Versión 2.0.5 - 2026-03-25
 - Se garantiza que al abrir “Importar expedientes” desde la vista simplificada, el modal entre siempre en modo **solo códigos** aunque se dispare con el botón general.
 - En ese contexto simplificado se ocultan de forma forzada “Nombre del tesauro” y “Referencia”, evitando pedir o crear un tesauro inicial en la carga de expedientes.
