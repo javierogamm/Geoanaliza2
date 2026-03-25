@@ -1,5 +1,10 @@
 # Log de cambios
 
+## Versión 2.0.1 - 2026-03-25
+- Se separan completamente las dos experiencias: la vista habitual y la vista simplificada ya no aparecen mezcladas en pantalla.
+- Se añade un botón en la cabecera para cambiar a vista simplificada; al activarla se oculta todo el flujo estándar y solo queda visible la funcionalidad reducida de transposición.
+- Se añade también el botón de retorno a vista completa para recuperar el landing habitual sin recargar la página.
+
 ## Versión 2.0.0 - 2026-03-25
 - Se añade en la parte superior una **vista simplificada de transposición** con un flujo guiado de 5 pasos: importar expedientes, indicar si existe fichero de datos por expediente, cargar ese fichero si aplica, crear datos manuales y lanzar la exportación transpuesta.
 - La vista simplificada permite importar de una sola vez columnas desde **CSV/XLSX/XLS** (una fila por expediente y una columna por dato), creando automáticamente tesauros tipo `csv` para reutilizarlos en la transposición.

@@ -47,6 +47,10 @@ const customColumnsList = document.getElementById('custom-columns-list');
 const customThesaurusFeedback = document.getElementById('custom-thesaurus-feedback');
 const stepPanels = document.querySelectorAll('.step-panel');
 const stepSkipButtons = document.querySelectorAll('.step-skip-btn');
+const defaultWorkflowView = document.getElementById('default-workflow-view');
+const simplifiedWorkflowView = document.getElementById('simplified-workflow-view');
+const showSimplifiedViewButton = document.getElementById('show-simplified-view-btn');
+const showStandardViewButton = document.getElementById('show-standard-view-btn');
 const MAX_LIMIT = 1000;
 const BATCH_SIZE = 100;
 const DEFAULT_LIMIT = 20;
@@ -120,6 +124,22 @@ const togglePanelsByMode = () => {
 
   if (areaSearchSlot) {
     areaSearchSlot.classList.toggle('is-hidden', searchMode !== 'map');
+  }
+};
+
+const setWorkflowView = (viewMode) => {
+  const showSimplified = viewMode === 'simplified';
+  if (defaultWorkflowView) {
+    defaultWorkflowView.classList.toggle('is-hidden', showSimplified);
+  }
+  if (simplifiedWorkflowView) {
+    simplifiedWorkflowView.classList.toggle('is-hidden', !showSimplified);
+  }
+  if (showSimplifiedViewButton) {
+    showSimplifiedViewButton.classList.toggle('is-hidden', showSimplified);
+  }
+  if (showStandardViewButton) {
+    showStandardViewButton.classList.toggle('is-hidden', !showSimplified);
   }
 };
 
@@ -536,6 +556,20 @@ initSimplifiedTransposeView({
     refreshTableWithCurrentData();
   }
 });
+
+if (showSimplifiedViewButton) {
+  showSimplifiedViewButton.addEventListener('click', () => {
+    setWorkflowView('simplified');
+  });
+}
+
+if (showStandardViewButton) {
+  showStandardViewButton.addEventListener('click', () => {
+    setWorkflowView('standard');
+  });
+}
+
+setWorkflowView('standard');
 
 document.addEventListener('thesaurus-workflow-start', () => {
   markStepAsActive(
