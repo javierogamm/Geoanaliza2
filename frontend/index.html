@@ -23,19 +23,31 @@
             OpenStreetMap.
           </p>
           <div class="view-switch">
+            <button id="show-expedients-view-btn" type="button" class="btn-secondary">Crear expedientes</button>
+            <button id="show-geolocation-view-btn" type="button" class="btn-secondary">Geolocalización</button>
             <button id="show-simplified-view-btn" type="button" class="btn-secondary">Vista simplificada</button>
             <button id="show-standard-view-btn" type="button" class="btn-secondary is-hidden">Vista completa</button>
           </div>
         </div>
       </header>
 
-      <section id="default-workflow-view">
+      <section id="expedients-workflow-view" class="panel">
+        <div class="quick-action-panel">
+          <h2>Crear expedientes</h2>
+          <p class="meta">Genera expedientes automáticamente a partir de los resultados y la configuración activa.</p>
+          <button id="create-expedients-btn" type="button" class="btn btn-primary">✨ Crear Expedientes</button>
+        </div>
+      </section>
 
-      <section class="panel step-panel">
+      <section id="default-workflow-view" class="is-hidden">
+
+      <details class="panel step-panel accordion-step">
+        <summary class="accordion-summary">
+          <span class="step-badge">Paso 1</span>
+          <h2>Importar expedientes</h2>
+        </summary>
         <div class="step-header">
           <div>
-            <p class="step-badge">Paso 1</p>
-            <h2>Importar expedientes</h2>
             <p class="meta">Carga un Excel o salta este paso si ya tienes los expedientes preparados.</p>
           </div>
           <div class="step-actions">
@@ -44,13 +56,15 @@
           </div>
         </div>
         <p class="step-feedback">Al importar los expedientes se generarán filas ficticias y se mostrarán también en el mapa.</p>
-      </section>
+      </details>
 
-      <section class="panel step-panel">
+      <details class="panel step-panel accordion-step">
+        <summary class="accordion-summary">
+          <span class="step-badge">Paso 2</span>
+          <h2>Modo de geolocalización</h2>
+        </summary>
         <div class="step-header">
           <div>
-            <p class="step-badge">Paso 2</p>
-            <h2>Crear puntos en el mapa</h2>
             <p class="meta">Elige si quieres indicar una ciudad o dibujar un área, o salta esta fase y continúa.</p>
           </div>
           <div class="step-actions">
@@ -58,33 +72,34 @@
           </div>
         </div>
         <p class="step-feedback">Cuando cambies de modo aparecerán las cajas de búsqueda o el mapa para dibujar.</p>
-      </section>
+        <section class="mode-panel">
+          <h2>¿Cómo quieres pedir los puntos?</h2>
+          <div class="mode-options">
+            <label class="mode-option">
+              <input type="radio" name="search-mode" value="city" checked />
+              <span>
+                <strong>Indicar población</strong>
+                <small>Usa municipio y barrio para buscar</small>
+              </span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="search-mode" value="map" />
+              <span>
+                <strong>Con mapa</strong>
+                <small>Dibuja un área y consulta los puntos</small>
+              </span>
+            </label>
+          </div>
+        </section>
+      </details>
 
-      <section class="panel mode-panel">
-        <h2>¿Cómo quieres pedir los puntos?</h2>
-        <div class="mode-options">
-          <label class="mode-option">
-            <input type="radio" name="search-mode" value="city" checked />
-            <span>
-              <strong>Indicar población</strong>
-              <small>Usa municipio y barrio para buscar</small>
-            </span>
-          </label>
-          <label class="mode-option">
-            <input type="radio" name="search-mode" value="map" />
-            <span>
-              <strong>Con mapa</strong>
-              <small>Dibuja un área y consulta los puntos</small>
-            </span>
-          </label>
-        </div>
-      </section>
-
-      <section class="panel step-panel">
+      <details class="panel step-panel accordion-step">
+        <summary class="accordion-summary">
+          <span class="step-badge">Paso 3</span>
+          <h2>Completar datos y mapa</h2>
+        </summary>
         <div class="step-header">
           <div>
-            <p class="step-badge">Paso 3</p>
-            <h2>Completar datos o dibujar</h2>
             <p class="meta">Cuando elijas el modo, rellena las cajas o dibuja el polígono en el mapa, o salta esta fase.</p>
           </div>
           <div class="step-actions">
@@ -92,7 +107,7 @@
           </div>
         </div>
         <p class="step-feedback">Define municipio y límites o traza el área para ver los puntos sobre el mapa.</p>
-      </section>
+      </details>
 
       <section class="panel form-panel">
         <form id="search-form" class="form">
@@ -166,6 +181,22 @@
         <div class="step-header">
           <div>
             <p class="step-badge">Paso 5</p>
+            <h2>Añadir columna</h2>
+            <p class="meta">Crea columnas personalizadas para completar los expedientes antes de transponer.</p>
+          </div>
+          <div class="step-actions">
+            <button id="add-column-btn" type="button" class="btn btn-add">
+              <span class="btn-icon">+</span> Añadir columna
+            </button>
+          </div>
+        </div>
+        <p class="step-feedback">Puedes añadir columnas tipo selector, número, moneda o fecha en cualquier momento.</p>
+      </section>
+
+      <section class="panel step-panel">
+        <div class="step-header">
+          <div>
+            <p class="step-badge">Paso 6</p>
             <h2>Transponer datos</h2>
             <p class="meta">Transpón la tabla cuando hayas importado expedientes y tesauros, o salta esta fase.</p>
           </div>
@@ -184,12 +215,6 @@
             <p class="meta" id="results-meta"></p>
             <button id="import-csv-btn" type="button" class="btn btn-import">
               📄 Importar CSV
-            </button>
-            <button id="create-expedients-btn" type="button" class="btn btn-primary">
-              ✨ Crear Expedientes
-            </button>
-            <button id="add-column-btn" type="button" class="btn btn-add">
-              <span class="btn-icon">+</span> Añadir columna
             </button>
             <button id="export-btn" type="button" class="btn" disabled>Exportar CSV</button>
           </div>

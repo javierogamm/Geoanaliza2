@@ -158,6 +158,30 @@ h1 {
   gap: 8px;
 }
 
+.accordion-step > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.accordion-step > summary::-webkit-details-marker {
+  display: none;
+}
+
+.accordion-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.accordion-summary h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.quick-action-panel h2 {
+  margin-top: 0;
+}
+
 .step-header {
   display: flex;
   align-items: flex-start;

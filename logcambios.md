@@ -1,5 +1,12 @@
 # Log de cambios
 
+## Versión 2.1.0 - 2026-04-01
+- Se reestructura la navegación principal con dos accesos superiores: **Crear expedientes** y **Geolocalización**, separando la acción rápida de creación del flujo de localización.
+- Se incorpora una vista dedicada de **Crear expedientes** con una explicación breve y el botón de ejecución centralizado.
+- La vista de **Geolocalización** reorganiza los pasos 1, 2 y 3 en modo acordeón, iniciando colapsados y avanzando automáticamente al siguiente bloque al completar o saltar cada fase.
+- El paso de tesauros mantiene el **Paso 4** como opcional (saltable), se añade un nuevo **Paso 5** para **Añadir columna** y el bloque de transposición pasa a **Paso 6**.
+- Se retiran de la cabecera de resultados los botones de **Crear Expedientes** y **Añadir columna** para evitar duplicidades y mantener el flujo guiado por pasos.
+
 ## Versión 2.0.6 - 2026-03-25
 - La transposición deja de incluir el campo base de arriba (Dirección): se oculta el bloque “Columnas base” en el modal y ya no se generan filas base durante la transposición.
 - El modal de selección para transponer valida únicamente columnas personalizadas (tesauros traídos por CSV/Excel o creados manualmente).
