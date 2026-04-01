@@ -48,7 +48,10 @@ const customThesaurusFeedback = document.getElementById('custom-thesaurus-feedba
 const stepPanels = document.querySelectorAll('.step-panel');
 const stepSkipButtons = document.querySelectorAll('.step-skip-btn');
 const defaultWorkflowView = document.getElementById('default-workflow-view');
+const expedientsWorkflowView = document.getElementById('expedients-workflow-view');
 const simplifiedWorkflowView = document.getElementById('simplified-workflow-view');
+const showExpedientsViewButton = document.getElementById('show-expedients-view-btn');
+const showGeolocationViewButton = document.getElementById('show-geolocation-view-btn');
 const showSimplifiedViewButton = document.getElementById('show-simplified-view-btn');
 const showStandardViewButton = document.getElementById('show-standard-view-btn');
 const MAX_LIMIT = 1000;
@@ -71,6 +74,7 @@ let pointsLayerGroup = null;
 let locationMarker = null;
 let searchMode = 'city';
 const orderedStepPanels = Array.from(stepPanels);
+const accordionStepPanels = orderedStepPanels.slice(0, 3);
 
 const formatBoundingBoxLabel = (bbox) =>
   `S:${bbox.south.toFixed(5)} W:${bbox.west.toFixed(5)} N:${bbox.north.toFixed(5)} E:${bbox.east.toFixed(5)}`;
@@ -128,19 +132,34 @@ const togglePanelsByMode = () => {
 };
 
 const setWorkflowView = (viewMode) => {
+  const showExpedients = viewMode === 'expedients';
+  const showGeolocation = viewMode === 'standard';
   const showSimplified = viewMode === 'simplified';
-  if (defaultWorkflowView) {
-    defaultWorkflowView.classList.toggle('is-hidden', showSimplified);
+
+  expedientsWorkflowView?.classList.toggle('is-hidden', !showExpedients);
+  defaultWorkflowView?.classList.toggle('is-hidden', !showGeolocation);
+  simplifiedWorkflowView?.classList.toggle('is-hidden', !showSimplified);
+
+  showExpedientsViewButton?.classList.toggle('is-hidden', showExpedients);
+  showGeolocationViewButton?.classList.toggle('is-hidden', showGeolocation);
+  showSimplifiedViewButton?.classList.toggle('is-hidden', showSimplified);
+  showStandardViewButton?.classList.toggle('is-hidden', !showSimplified);
+
+  if (showGeolocation && accordionStepPanels.length) {
+    const hasAnyOpen = accordionStepPanels.some((panel) => panel.open);
+    if (!hasAnyOpen) {
+      accordionStepPanels[0].open = true;
+    }
   }
-  if (simplifiedWorkflowView) {
-    simplifiedWorkflowView.classList.toggle('is-hidden', !showSimplified);
-  }
-  if (showSimplifiedViewButton) {
-    showSimplifiedViewButton.classList.toggle('is-hidden', showSimplified);
-  }
-  if (showStandardViewButton) {
-    showStandardViewButton.classList.toggle('is-hidden', !showSimplified);
-  }
+};
+
+const openNextAccordionStep = (currentPanel) => {
+  const currentIndex = accordionStepPanels.indexOf(currentPanel);
+  if (currentIndex < 0) return;
+  const nextPanel = accordionStepPanels[currentIndex + 1];
+  if (!nextPanel) return;
+  nextPanel.open = true;
+  scrollToPanel(nextPanel);
 };
 
 const scrollToPanel = (panel) => {
@@ -158,6 +177,7 @@ const markStepAsSkipped = (panel) => {
     feedback.classList.add('step-feedback--skipped');
     feedback.classList.remove('step-feedback--active');
   }
+  openNextAccordionStep(panel);
 };
 
 const markStepAsActive = (panel, message) => {
@@ -189,6 +209,7 @@ const markStepAsDone = (panel, message) => {
   if (!wasDone) {
     scrollToPanel(panel);
   }
+  openNextAccordionStep(panel);
 };
 
 const mergePointsById = (currentPoints, incomingPoints = []) => {
@@ -568,6 +589,17 @@ if (showSimplifiedViewButton) {
     setWorkflowView('simplified');
   });
 }
+if (showExpedientsViewButton) {
+  showExpedientsViewButton.addEventListener('click', () => {
+    setWorkflowView('expedients');
+  });
+}
+
+if (showGeolocationViewButton) {
+  showGeolocationViewButton.addEventListener('click', () => {
+    setWorkflowView('standard');
+  });
+}
 
 if (showStandardViewButton) {
   showStandardViewButton.addEventListener('click', () => {
@@ -593,14 +625,14 @@ document.addEventListener('thesaurus-validated', () => {
 
 document.addEventListener('transposition-started', () => {
   markStepAsActive(
-    orderedStepPanels[4],
+    orderedStepPanels[5],
     'Selecciona los campos a transponer y revisa la vista previa antes de exportar.'
   );
 });
 
 document.addEventListener('transposition-exported', () => {
   markStepAsDone(
-    orderedStepPanels[4],
+    orderedStepPanels[5],
     'Transposición exportada correctamente. Los datos se han descargado en CSV.'
   );
 });
