@@ -1,5 +1,11 @@
 # Log de cambios
 
+## Versión 2.1.2 - 2026-04-13
+- Se corrige la búsqueda por lotes para que no se corte prematuramente en 100 puntos: la recolección continúa hasta alcanzar el número solicitado (o hasta agotar intentos sin crecimiento real de puntos únicos).
+- Se ajusta la lógica de progreso para mostrar como objetivo el total solicitado y no frenar por un `totalAvailable` parcial devuelto por una sola petición.
+- Se protege la exportación orientada a uso en Excel para coordenadas: latitud y longitud se exportan como texto (`=\"valor\"`) para evitar que Excel las transforme en miles/millones por configuración regional.
+- Se aplica el mismo tratamiento de coordenadas en la exportación transpuesta para mantener los valores geográficos exactos al abrir en Excel.
+
 ## Versión 2.1.1 - 2026-04-13
 - Se endurece la consulta de puntos para evitar caídas por saturación de Overpass: la APP ahora reintenta automáticamente cuando recibe errores temporales (429/502/503/504/timeout) y aplica espera progresiva entre intentos.
 - En cada reintento se reduce el tamaño del bloque solicitado (de mayor a menor) para disminuir carga y evitar sobreespamear el servicio cuando está saturado.

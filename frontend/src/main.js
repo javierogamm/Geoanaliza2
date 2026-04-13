@@ -59,7 +59,7 @@ const BATCH_SIZE = 100;
 const DEFAULT_LIMIT = 20;
 const MIN_BATCH_SIZE = 5;
 const MAX_BATCH_FAILURES = 5;
-const MAX_EMPTY_GROWTH_STREAK = 3;
+const MAX_EMPTY_GROWTH_STREAK = 10;
 
 // Variable para guardar los últimos puntos y poder re-renderizar
 let lastPointsData = null;
@@ -308,14 +308,12 @@ const fetchPointsInBatches = async ({ limit, requestFactory }) => {
     const growth = collectedPoints.length - previousSize;
     noGrowthStreak = growth === 0 ? noGrowthStreak + 1 : 0;
 
-    const targetForRender = aggregatedMeta.totalAvailable
-      ? Math.min(aggregatedMeta.totalAvailable, safeLimit)
-      : safeLimit;
+    const targetForRender = safeLimit;
 
     renderMeta({
       city: aggregatedMeta.city || '',
       neighbourhood: aggregatedMeta.neighbourhood || '',
-      totalAvailable: aggregatedMeta.totalAvailable || targetForRender,
+      totalAvailable: Math.max(aggregatedMeta.totalAvailable || 0, collectedPoints.length, targetForRender),
       returned: collectedPoints.length,
       areaLabel: aggregatedMeta.areaLabel,
       boundingBox: aggregatedMeta.boundingBox
@@ -324,7 +322,7 @@ const fetchPointsInBatches = async ({ limit, requestFactory }) => {
 
     plotPointsOnMap(collectedPoints);
 
-    if (collectedPoints.length >= targetForRender) {
+    if (collectedPoints.length >= safeLimit) {
       break;
     }
 
