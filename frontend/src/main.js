@@ -57,6 +57,9 @@ const showStandardViewButton = document.getElementById('show-standard-view-btn')
 const MAX_LIMIT = 1000;
 const BATCH_SIZE = 100;
 const DEFAULT_LIMIT = 20;
+const MIN_BATCH_SIZE = 5;
+const MAX_BATCH_FAILURES = 5;
+const MAX_EMPTY_GROWTH_STREAK = 3;
 
 // Variable para guardar los últimos puntos y poder re-renderizar
 let lastPointsData = null;
@@ -220,10 +223,25 @@ const mergePointsById = (currentPoints, incomingPoints = []) => {
   return Array.from(registry.values());
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableOverpassError = (error) => {
+  const message = error instanceof Error ? error.message : String(error || '');
+  return (
+    message.includes('Overpass respondió 429') ||
+    message.includes('Overpass respondió 502') ||
+    message.includes('Overpass respondió 503') ||
+    message.includes('Overpass respondió 504') ||
+    message.includes('timeout') ||
+    message.includes('too busy')
+  );
+};
+
 const fetchPointsInBatches = async ({ limit, requestFactory }) => {
   const safeLimit = Math.max(1, Math.min(limit, MAX_LIMIT));
-  const plannedBatches = Math.max(1, Math.ceil(safeLimit / BATCH_SIZE));
   let collectedPoints = [];
+  let batchNumber = 0;
+  let noGrowthStreak = 0;
 
   const aggregatedMeta = {
     city: null,
@@ -233,25 +251,62 @@ const fetchPointsInBatches = async ({ limit, requestFactory }) => {
     totalAvailable: 0
   };
 
-  for (let batchIndex = 0; batchIndex < plannedBatches; batchIndex += 1) {
+  while (collectedPoints.length < safeLimit) {
+    batchNumber += 1;
     const remaining = safeLimit - collectedPoints.length;
     if (remaining <= 0) break;
+    let chunkLimit = Math.min(BATCH_SIZE, remaining);
+    let batchData = null;
+    let consecutiveFailures = 0;
+    let lastError = null;
 
-    setStatus(
-      `Buscando puntos en OpenStreetMap... (bloque ${batchIndex + 1}/${plannedBatches})`,
-      false,
-      { loading: true }
-    );
+    while (!batchData) {
+      setStatus(
+        `Buscando puntos en OpenStreetMap... (bloque ${batchNumber}, tamaño ${chunkLimit})`,
+        false,
+        { loading: true }
+      );
 
-    const data = await requestFactory(Math.min(BATCH_SIZE, remaining));
+      try {
+        batchData = await requestFactory(chunkLimit);
+      } catch (error) {
+        lastError = error;
+        if (!isRetryableOverpassError(error)) {
+          throw error;
+        }
 
-    aggregatedMeta.city ??= data.city ?? null;
-    aggregatedMeta.neighbourhood ??= data.neighbourhood ?? null;
-    aggregatedMeta.boundingBox ??= data.boundingBox ?? null;
-    aggregatedMeta.areaLabel ??= data.areaLabel;
-    aggregatedMeta.totalAvailable = Math.max(aggregatedMeta.totalAvailable, data.totalAvailable || 0);
+        consecutiveFailures += 1;
+        if (consecutiveFailures > MAX_BATCH_FAILURES && chunkLimit <= MIN_BATCH_SIZE) {
+          throw error;
+        }
 
-    collectedPoints = mergePointsById(collectedPoints, data.points || []);
+        const reducedChunk = Math.max(MIN_BATCH_SIZE, Math.floor(chunkLimit / 2));
+        chunkLimit = reducedChunk < chunkLimit ? reducedChunk : Math.max(MIN_BATCH_SIZE, chunkLimit - 1);
+        const cooldownMs = Math.min(10000, 800 * 2 ** consecutiveFailures);
+
+        setStatus(
+          `Overpass está saturado. Reintentando en ${(cooldownMs / 1000).toFixed(1)}s con ${chunkLimit} puntos...`,
+          false,
+          { loading: true }
+        );
+        await delay(cooldownMs);
+      }
+    }
+
+    if (!batchData) {
+      throw lastError || new Error('No se pudo completar la consulta de puntos.');
+    }
+
+    aggregatedMeta.city ??= batchData.city ?? null;
+    aggregatedMeta.neighbourhood ??= batchData.neighbourhood ?? null;
+    aggregatedMeta.boundingBox ??= batchData.boundingBox ?? null;
+    aggregatedMeta.areaLabel ??= batchData.areaLabel;
+    aggregatedMeta.totalAvailable = Math.max(aggregatedMeta.totalAvailable, batchData.totalAvailable || 0);
+
+    const previousSize = collectedPoints.length;
+    collectedPoints = mergePointsById(collectedPoints, batchData.points || []);
+    const growth = collectedPoints.length - previousSize;
+    noGrowthStreak = growth === 0 ? noGrowthStreak + 1 : 0;
 
     const targetForRender = aggregatedMeta.totalAvailable
       ? Math.min(aggregatedMeta.totalAvailable, safeLimit)
@@ -272,9 +327,20 @@ const fetchPointsInBatches = async ({ limit, requestFactory }) => {
     if (collectedPoints.length >= targetForRender) {
       break;
     }
+
+    if (noGrowthStreak >= MAX_EMPTY_GROWTH_STREAK) {
+      break;
+    }
   }
 
-  setStatus('');
+  const requestedPoints = safeLimit;
+  const deliveredPoints = collectedPoints.length;
+  const completionLabel =
+    deliveredPoints >= requestedPoints
+      ? `Consulta finalizada: ${deliveredPoints} de ${requestedPoints} puntos completados.`
+      : `Consulta finalizada: ${deliveredPoints} de ${requestedPoints} puntos (no hay más puntos únicos disponibles ahora).`;
+
+  setStatus(completionLabel, false, { loading: false });
 
   return {
     ...aggregatedMeta,

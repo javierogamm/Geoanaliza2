@@ -1,5 +1,11 @@
 # Log de cambios
 
+## Versión 2.1.1 - 2026-04-13
+- Se endurece la consulta de puntos para evitar caídas por saturación de Overpass: la APP ahora reintenta automáticamente cuando recibe errores temporales (429/502/503/504/timeout) y aplica espera progresiva entre intentos.
+- En cada reintento se reduce el tamaño del bloque solicitado (de mayor a menor) para disminuir carga y evitar sobreespamear el servicio cuando está saturado.
+- Se añade confirmación explícita al terminar la carga indicando cuántos puntos se han completado frente a los solicitados, incluso cuando no hay más puntos únicos disponibles en ese momento.
+- La consulta Overpass pasa a incluir límite por petición (`out center <limit>`) y timeout más acotado para hacer cada llamada más ligera y estable.
+
 ## Versión 2.1.0 - 2026-04-01
 - Se reestructura la navegación principal con dos accesos superiores: **Crear expedientes** y **Geolocalización**, separando la acción rápida de creación del flujo de localización.
 - Se incorpora una vista dedicada de **Crear expedientes** con una explicación breve y el botón de ejecución centralizado.
