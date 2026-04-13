@@ -20,14 +20,15 @@ const OVERPASS_URL =
 const MIN_INTERVAL_MS = process.env.NODE_ENV === 'test' ? 0 : 1000;
 const scheduleOverpass = createRateLimiter(MIN_INTERVAL_MS);
 
-const buildQuery = (bbox: BoundingBox): string => {
+const buildQuery = (bbox: BoundingBox, limit: number): string => {
   const { south, west, north, east } = bbox;
-  const header = '[out:json][timeout:25];';
+  const header = '[out:json][timeout:20];';
   const addressFilters = ['["name"]["addr:street"]', '["name"]["addr:full"]', '["name"]["addr:place"]'];
   const buildFragments = (type: 'node' | 'way' | 'relation') =>
     addressFilters.map((filter) => `${type}${filter}(${south},${west},${north},${east});`).join('');
 
-  return `${header}(${buildFragments('node')}${buildFragments('way')}${buildFragments('relation')});out center;`;
+  const safeLimit = Math.max(1, Math.min(limit, 1000));
+  return `${header}(${buildFragments('node')}${buildFragments('way')}${buildFragments('relation')});out center ${safeLimit};`;
 };
 
 const resolveCoordinates = (element: OverpassElement): { lat: number; lon: number } | null => {
@@ -87,7 +88,7 @@ export const queryOverpassForNodes = async (
   bbox: BoundingBox,
   limit: number
 ): Promise<{ totalAvailable: number; points: Point[] }> => {
-  const query = buildQuery(bbox);
+  const query = buildQuery(bbox, limit);
   const body = new URLSearchParams({ data: query });
 
   console.info('[overpass] Sending query', {

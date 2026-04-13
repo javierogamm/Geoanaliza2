@@ -29,7 +29,7 @@ function formatValueForCsv(fieldName, value) {
   if (!stringValue) return '';
 
   if (isCoordinateField(fieldName)) {
-    return formatDecimalWithComma(stringValue);
+    return asExcelText(stringValue);
   }
 
   if (isNumericWithDot(stringValue)) {
@@ -52,6 +52,10 @@ function isNumericWithDot(value) {
 
 function formatDecimalWithComma(value) {
   return value.replace('.', ',');
+}
+
+function asExcelText(value) {
+  return `="${value}"`;
 }
 
 export function escapeCsvValue(value) {

@@ -265,8 +265,8 @@ export function clearResults() {
 // 👉 Coordenadas en CSV deben mantenerse literales, sin aplicar formato local
 function formatNumberForCsv(value) {
   if (typeof value !== 'number') return '';
-  // Se devuelve tal cual para evitar agrupación de miles o cambio de separador decimal
-  return value.toString();
+  // Forzamos texto para que Excel no convierta coordenadas en miles/millones por configuración regional.
+  return `="${value.toString()}"`;
 }
 
 // Escapa valores para CSV (usamos ; como separador)
